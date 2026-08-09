@@ -1,0 +1,202 @@
+{
+  "schema_version": "1.0.0",
+  "reviewer": "claude",
+  "reviewer_role": "B파트 — Observability / Reliability / Change Safety",
+  "target": "codex-a-part",
+  "target_scope": "service/, deploy/, scripts/deploy/, tests/test_service_*, tests/test_deploy_*",
+  "target_tree": "/home/dgkim/dgkim/FinLLM:0.2",
+  "reviewer_tree": "/home/dgkim/dgkim/FinLLM-0.2",
+  "first_review_utc": "2026-08-09T07:45:00Z",
+  "reverified_utc": "2026-08-09T08:10:00Z",
+
+  "reverification_context": "재검증 시점까지 A파트 소스는 변경되지 않았다(service/ 최신 mtime 05:24, deploy/ 05:30, 리뷰 07:40). 따라서 전 항목 NOT_FIXED이며 이는 품질 판단이 아니라 대응 기회가 없었다는 뜻이다. 재검증의 실질은 내 원래 판정에 대한 자체 감사였고, 그 결과 F2의 근거를 정정하고 F4의 인과를 통제 실험으로 확정하고 신규 MAJOR 1건을 찾았다.",
+
+  "environment": {
+    "host_gpu": "2x NVIDIA RTX A6000 48GB, driver 535.288.01, CUDA 12.2",
+    "docker": "29.6.1 / compose v5.3.0",
+    "python_used_for_review": "/home/dgkim/dgkim/new_project/.venv/bin/python (3.10.12)",
+    "note": "리뷰 중 CUDA/드라이버는 변경하지 않았다. Codex 트리의 파일도 수정하지 않았다."
+  },
+
+  "summary": {
+    "BLOCKER": 1,
+    "MAJOR": 7,
+    "MINOR": 1,
+    "fixed": 0,
+    "not_fixed": 8,
+    "invalid": 0,
+    "new_since_first_review": 1
+  },
+
+  "recommended_order": ["F1", "F9", "F2", "F6", "F4", "F3", "F5", "F7", "F8"],
+
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "BLOCKER",
+      "status": "NOT_FIXED",
+      "title": "추론 엔진이 죽어도 /ready가 영구히 200을 반환한다",
+      "file": "service/inference.py",
+      "line": "52-77 (probe_model)",
+      "also": [
+        "service/runtime.py:195-222 (refresh_inference_readiness)",
+        "deploy/compose.yaml:51-59 (vllm healthcheck)"
+      ],
+      "problem": "readiness가 생성 경로를 한 번도 관측하지 않는다. probe_model()은 /v1/models 목록에 model_id가 있는지만 확인한다. 추론 엔진이 죽어 모든 생성이 실패해도 /v1/models는 정적 설정에서 계속 200을 반환하므로 /ready는 영구히 200 ready를 유지한다.",
+      "why_it_matters": "/ready는 트래픽 수용 게이트다. 100% 실패 중인 서비스에 트래픽이 계속 유입된다. 캐시 지연 창이 아니라 영구 상태다. compose의 vllm healthcheck도 동일하게 /v1/models만 curl하므로 depends_on(condition: service_healthy, restart: true)도 발동하지 않는다. 어느 계층도 이 상태를 탐지하지 못한다.",
+      "reproduction": "repro/f1_engine_dead.sh",
+      "expected": "생성이 지속 실패하면 /ready가 503으로 내려가 트래픽 수용이 중단되어야 한다.",
+      "actual": "30초간 6/6 샘플에서 POST=502, /ready=200, detail='model listed by inference endpoint'. checks.inference_endpoint_reachable=true, checks.model_ready=true 유지.",
+      "suggested_fix_direction": "readiness에 생성 경로 신호를 반영한다. 연속 생성 실패 N회 또는 최근 창 실패율 임계 초과 시 model_ready=false로 내리고 성공 시 회복시킨다. probe를 /v1/models 단독이 아니라 vLLM /health 또는 최소 생성 호출과 결합하는 것도 대안이다. compose healthcheck도 같은 신호를 쓰도록 맞춘다."
+    },
+    {
+      "id": "F9",
+      "severity": "MAJOR",
+      "status": "NEW",
+      "title": "graceful shutdown이 in-flight 응답을 잘라먹는데 서버는 200으로 기록한다",
+      "file": "service/runtime.py",
+      "line": "295-300 (handle_rag_request finally)",
+      "also": [
+        "service/http_server.py:87 (handle_rag_request 호출)",
+        "service/http_server.py:108 (_write_json)",
+        "service/http_server.py:23 (daemon_threads = True)",
+        "service/app.py:60-72 (run finally: wait_for_drain -> server_close -> 프로세스 종료)"
+      ],
+      "problem": "RequestGate가 handle_rag_request 반환 시점(runtime.py:300 finally의 _gate.leave())에 해제되는데, 실제 응답 바이트 쓰기는 그 이후 http_server.py:108의 _write_json에서 일어난다. 따라서 wait_for_drain()이 in_flight==0을 보고 통과한 뒤 server_close()와 프로세스 종료가 진행되는 동안 handler thread(daemon_threads=True라 join되지 않음)가 아직 body를 쓰고 있을 수 있다.",
+      "why_it_matters": "완료 조건 6번(graceful shutdown 및 in-flight request 처리)이 지키려는 바로 그 요청이 깨진다. 더 심각한 것은 증거 신뢰성이다. 서버는 send_response(200)을 이미 호출했으므로 access log에 200으로 남고 metrics도 request_finished(success=True)로 집계한다. 서버 기록은 '전부 성공'인데 클라이언트는 잘린 응답을 받는다. finllm_request_errors_total도 세지 않으므로 오류율 SLO가 이 실패를 보지 못한다. B파트 rollback 절차는 API를 재기동하므로 롤백·배포마다 이 창에 노출된다.",
+      "reproduction": "repro/f9_inflight_truncation.py (동시 10건), repro/f2_drain_window.py (단일 요청 3회 반복)",
+      "expected": "drain timeout 안에 끝난 in-flight 요청은 응답 본문까지 온전히 전달되어야 한다.",
+      "actual": "설계 동시성 10건(각 12초 생성), 2초 후 SIGTERM, shutdown_timeout=30s 조건에서 완주 9/10, 실패 1/10 — req9가 IncompleteRead(0 bytes read, 636 more expected). 프로세스 종료 SIGTERM +11.06s. 그런데 서버 로그의 'POST /v1/rag/chat/completions HTTP/1.1\" 200'은 10건으로 집계된다. 단일 요청 버전은 3/3 모두 IncompleteRead. 여유가 큰 조건에서는 정상 200 636B를 수신하므로 상시 실패가 아니라 응답 쓰기와 프로세스 종료 사이의 경합이다.",
+      "suggested_fix_direction": "gate 해제를 응답 쓰기 이후로 옮긴다. admission/leave를 do_POST 전체를 감싸는 위치로 올리거나 runtime이 응답 직렬화까지 책임지도록 경계를 조정한다. 추가로 daemon_threads에 의존하지 말고 drain 완료 후 handler thread를 명시적으로 join한다.",
+      "severity_rationale": "BLOCKER로 올리지 않은 이유는 shutdown 창에 한정되고 정상 운영 중에는 발생하지 않기 때문이다. 다만 서버는 성공으로 기록하는데 클라이언트는 실패한다는 점에서 증거 신뢰성을 훼손하므로 MAJOR 중 높은 쪽으로 본다.",
+      "test_gap": "tests/ 전체에서 service/app.py를 실행하는 테스트가 0건이다. 이 결함이 사는 Application.request_shutdown 경로에 커버리지가 없다."
+    },
+    {
+      "id": "F2",
+      "severity": "MAJOR",
+      "status": "NOT_FIXED",
+      "title": "drain 중 /ready가 관측 가능한 503을 제공하지 않는다",
+      "file": "service/app.py",
+      "line": "37-44 (request_shutdown), 55-73 (run)",
+      "problem": "request_shutdown()이 begin_shutdown() 직후 server.shutdown()을 호출해 accept 루프를 멈춘다. 그 결과 drain이 진행되는 약 10초 동안 /health와 /ready를 사실상 조회할 수 없다.",
+      "why_it_matters": "오케스트레이터와 알림 체계는 '계획된 drain'과 '크래시'를 /health 200 + /ready 503으로 구분한다. compose api healthcheck(interval 10s, timeout 3s)와 Prometheus scrape(5s)는 0.5초 미만의 503 창에 들어갈 확률이 사실상 없고, 대신 매 배포마다 timeout 실패를 겪는다. B파트의 FinLLMGatewayDown(critical)이 정상 재배포마다 발화한다. Codex 자신의 계약(docs/cross-review/v0.2-interface-contract.md:121) 'B의 rollback/runbook은 shutdown 중 /ready=503을 정상 drain 신호로 취급해야 한다'가 실제로 사용 불가능하다.",
+      "reproduction": "repro/f2_drain_window.py",
+      "expected": "drain 동안 /health=200, /ready=503이 healthcheck 주기로 관측 가능해야 한다.",
+      "actual": "0.5초 timeout 연속 폴링 3회 반복 결과 전이는 다음과 같다. t=0.001~0.002s: /ready=503 (3회 중 2회 포착, 1회는 창이 짧아 놓침) -> t=0.502s: TimeoutError, 연결 거부가 아니라 timeout까지 hang -> t=10.02s: ConnectionRefused(프로세스 종료). 503 창은 0.5초 미만이고 이후 약 9.5초간 probe가 hang한다.",
+      "evidence_correction": "최초 리뷰에서 나는 'SIGTERM 직후 첫 샘플(+0s)부터 connection refused'라고 적었다. 이는 2초 간격 폴링이 만든 착각이었고 부정확하다. 503 창은 존재하되 0.5초 미만이다. 결론(운영상 drain 관측 불가)은 유지되며, hang이 refused보다 healthcheck에 불리하다는 점에서 근거는 오히려 강해졌다.",
+      "suggested_fix_direction": "accept 루프를 즉시 멈추지 말고 drain 완료 후에 server.shutdown()을 호출한다. begin_shutdown()으로 admission만 닫고 /health·/ready는 계속 응답하게 한 뒤, wait_for_drain() 완료 또는 timeout 이후 accept 루프를 종료하는 순서로 바꾼다. F9와 같은 수정으로 함께 해결될 가능성이 높다."
+    },
+    {
+      "id": "F3",
+      "severity": "MAJOR",
+      "status": "NOT_FIXED",
+      "title": "TTFT metric 부재 + 비스트리밍 + SLO 경계(le=2) bucket 부재",
+      "file": "service/metrics.py",
+      "line": "13-28 (DEFAULT_BUCKETS), 103-137 (render_prometheus)",
+      "also": ["service/inference.py:79-108 (generate — 비스트리밍)"],
+      "problem": "이 프로젝트의 유일한 지연 SLO인 P95 TTFT(2,000ms)를 서비스 metric으로 평가할 수 없다. (a) TTFT 계열 metric이 없다. (b) generate()가 비스트리밍 POST라 first token 시각 자체가 존재하지 않는다. (c) bucket이 ... 0.5, 1, 2.5 ... 로 SLO 경계인 2가 없어 histogram_quantile이 [1, 2.5]를 선형보간한다.",
+      "why_it_matters": "configs/profiles.json의 benchmark_policy.p95_ttft_ms_max=2000은 v0.1 전 실험과 ADR-0004 결론의 판정 기준이며 스트리밍 부하시험(load_test.py)으로 측정됐다. 운영 서비스가 비스트리밍이면 v0.1에서 측정한 지연 특성과 운영 지연 특성이 다른 값이고, gate가 쓰는 지표를 운영에서 확인할 방법이 없다. vLLM 0.9.2의 time_to_first_token_seconds bucket에도 2.0이 없음을 실측했으므로(ops/evidence/vllm-ttft-buckets.txt) upstream metric으로 대체할 수도 없다.",
+      "reproduction": "repro/f3_metric_contract.py",
+      "expected": "SLO 판정에 쓸 수 있는 TTFT histogram과 2,000ms 경계에 정확히 놓인 le=2 bucket.",
+      "actual": "노출 metric 6종(finllm_requests_total, finllm_request_errors_total, finllm_requests_in_flight, finllm_request_duration_seconds, finllm_retrieval_duration_seconds, finllm_generation_duration_seconds). ttft 계열 0건. bucket 경계 = 0.005 0.01 0.025 0.05 0.1 0.25 0.5 1 2.5 5 10 30 60 180 +Inf. service/inference.py에 'stream' 문자열 0건.",
+      "suggested_fix_direction": "둘 중 하나를 택하고 근거를 ADR로 남긴다. (1) 생성 호출을 stream=True로 바꾸고 finllm_generation_ttft_seconds를 le=2 포함 bucket으로 노출한다. (2) 비스트리밍을 유지한다면 이 서비스에 TTFT SLO가 적용 불가함을 명시하고 운영 SLO를 p95 end-to-end로 재정의하되 임계값을 실측으로 정한다. 어느 쪽이든 bucket에 SLO 경계값을 넣는다."
+    },
+    {
+      "id": "F4",
+      "severity": "MAJOR",
+      "status": "NOT_FIXED",
+      "title": "listen backlog 5로 인한 연결 무성 드롭이 metric에 집계되지 않는다",
+      "file": "service/http_server.py",
+      "line": "22-27 (FinLLMHTTPServer)",
+      "problem": "ThreadingHTTPServer의 listen backlog가 상속 기본값 5이며 재정의되지 않았다. 동시 접속이 이를 넘으면 커널이 연결을 리셋하고, 그 요청들은 route에 도달하지 못해 어떤 metric에도 집계되지 않는다.",
+      "why_it_matters": "오류율 SLO(1%)가 과부하 상황에서 정확히 무력화된다. 사용자 일부가 connection reset을 받는 동안 metric 기반 오류율은 정상으로 보인다. B파트의 FinLLMHighRequestErrorRate alert와 ops/runbooks/high-latency.md의 과부하 분기가 이 metric을 근거로 판단하므로 운영자가 '서비스 정상'이라고 잘못 결론낸다.",
+      "reproduction": "repro/f4_backlog_control.py (통제 실험), repro/f4_burst_http.py (HTTP 백엔드 드롭률)",
+      "expected": "요청이 거부되더라도 503 등으로 응답되어 metric에 집계되거나 최소한 드롭이 관측 가능해야 한다.",
+      "actual": "HTTP stub 백엔드: 동시 10 -> 드롭 0.0% / 30 -> 10.0% / 60 -> 35.0% / 120 -> 53.3%. 드롭 요청은 finllm_requests_total 증가분에 전혀 반영되지 않는다(동시 120에서 56건만 +56).",
+      "controlled_experiment": "동일 코드에서 request_queue_size만 5 -> 512로 바꾼 서브클래스와 비교. backlog=5는 120 동시에서 드롭 2건, backlog=512는 0건. 변수 하나만 바꿔 드롭이 사라지므로 backlog가 원인임을 확인했다.",
+      "magnitude_caveat": "드롭률은 백엔드 속도에 크게 의존한다. in-process fake에서는 120 동시에 1.7%, HTTP stub에서는 53.3%였다. 실제 vLLM 지연에서의 드롭률은 NOT_MEASURED다. 설계 동시성 10에서 드롭 0건인 것은 반복 측정에서 일관된다.",
+      "suggested_fix_direction": "request_queue_size를 설계 동시성과 버스트를 감당할 값으로 명시 설정하고 근거를 문서화한다. admission 한계 초과 시 커널 드롭이 아니라 503으로 명시 거부해 metric에 남도록 backpressure를 서비스 계층에 둔다."
+    },
+    {
+      "id": "F5",
+      "severity": "MAJOR",
+      "status": "NOT_FIXED",
+      "title": "GPU 기본값 0이 런북과 충돌하고 VRAM alert 오탐을 만든다",
+      "file": "deploy/compose.yaml",
+      "line": "49 (device_ids: [\"${FINLLM_GPU_DEVICE_ID:-0}\"])",
+      "also": ["deploy/.env.example:2"],
+      "problem": "GPU 기본값이 0인데 이 저장소의 런북은 GPU 1을 쓰라고 명시한다. docs/runbook-profile-a.md:10 — 'GPU 1을 쓴다. GPU 0에는 다른 프로세스가 상주하고 있어 peak VRAM 측정이 오염된다.'",
+      "why_it_matters": "기본값 그대로 docker compose up 하면 상주 프로세스가 있는 GPU에 배포된다. 산술적으로 즉시 오탐이 발생한다. GPU 0 점유 2,757 MiB + v0.1 실측 모델 사용량 22,362 MiB = 25,119 MiB로, B파트 alert 임계 24,576 MiB(profile-a.vram_class_gib=24)를 넘는다. 구성은 정상인데 critical이 발화하고, 반대로 peak VRAM 관측값은 남의 프로세스를 포함해 오염된다. peak VRAM은 이 프로젝트의 핵심 판정 기준이다.",
+      "reproduction": "nvidia-smi --id=0 --query-gpu=memory.used --format=csv,noheader → 2757 MiB. grep -n 'FINLLM_GPU_DEVICE_ID' deploy/compose.yaml deploy/.env.example → 기본값 0. grep -n 'GPU 1' docs/runbook-profile-a.md → 10행. B파트 alert 표현식은 'DCGM_FI_DEV_FB_USED > 24576'으로 gpu 라벨 필터가 없다.",
+      "expected": "기본값이 런북과 일치하거나 최소한 대상 GPU가 유휴하지 않으면 기동하지 않아야 한다.",
+      "actual": "기본값 0, 유휴 확인 없음, compose는 그대로 기동한다.",
+      "unverified": "vLLM을 실제로 GPU 0에 띄워 확인하지는 않았다. 산술과 설정값에 근거한 판단이다.",
+      "suggested_fix_direction": "기본값을 런북과 일치시키고 기동 전에 대상 GPU의 memory.used를 확인해 임계 이상이면 실패시키는 preflight를 둔다. scripts/run_profile_a.sh의 require_idle_gpu()가 이미 같은 검사를 한다."
+    },
+    {
+      "id": "F6",
+      "severity": "MAJOR",
+      "status": "NOT_FIXED",
+      "title": "오프라인 모델 반입 경로가 없어 런타임에 HuggingFace로 나간다",
+      "file": "deploy/compose.yaml",
+      "line": "33-40 (environment/volumes)",
+      "also": ["deploy/Dockerfile.vllm:71"],
+      "problem": "finllm-model-cache는 최초 생성 시 비어 있는 named volume이고, 호스트 모델 캐시를 마운트하지 않으며 HF_HUB_OFFLINE/TRANSFORMERS_OFFLINE도 설정하지 않는다. 따라서 최초 기동 시 vLLM이 런타임에 HuggingFace에서 모델을 내려받는다.",
+      "why_it_matters": "docs/on-prem-architecture.md:64-65가 전제를 명시한다 — '운영 서버는 런타임에 Hugging Face나 package registry에 접속하지 않는다. 모델과 container는 내부 registry/object store에서만 받는다.' 폐쇄망에서는 최초 기동이 start_period 15분을 소진한 뒤 실패한다. revision을 pin해도 다운로드 성공 여부가 외부 네트워크에 의존하므로 cold start가 재현 가능하지 않다.",
+      "reproduction": "repro/f6_offline.sh",
+      "expected": "내부 저장소의 모델 캐시를 읽기 전용으로 마운트하고 오프라인 모드를 강제해 런타임 외부 접속 없이 기동되어야 한다.",
+      "actual": "docker run --network none 으로 실행 시 ERROR [config.py:130] Error retrieving file list: MaxRetryError HTTPSConnectionPool(host='huggingface.co', port=443) ... NameResolutionError -> ValidationError: \"Invalid repository ID or local directory specified: 'Qwen/Qwen3-14B-AWQ'\". docker volume ls 결과 finllm-lab-v02_* 볼륨이 없어 compose up이 한 번도 실행된 적 없음도 확인했다.",
+      "suggested_fix_direction": "모델 캐시를 read-only bind mount로 주입하고 HF_HUB_OFFLINE=1을 설정한다. 반입 manifest(model id, revision, 파일별 SHA-256)를 기동 전에 검증하는 단계를 둔다. 참고로 이 호스트의 ~/.cache/huggingface에 두 pin된 모델이 이미 있다."
+    },
+    {
+      "id": "F7",
+      "severity": "MAJOR",
+      "status": "NOT_FIXED",
+      "title": "A/B 계약 이원화 — network, service 이름, metric 집합 불일치",
+      "file": "docs/cross-review/v0.2-interface-contract.md",
+      "line": "16-20 (Network integration), 82-92 (metric table)",
+      "problem": "A파트와 B파트가 서로 다른 v0.2 계약 문서를 각자 트리에 작성했고 내용이 다르다. Codex 트리는 service 이름 finllm-api, default network, metric 6종. Claude 트리는 finllm-gateway, 외부 network finllm-net, metric 14종, le=2 bucket. 두 문서 모두 상대 트리에 없다.",
+      "why_it_matters": "현재 상태로 통합하면 Prometheus가 대상을 찾지 못한다. B파트 스택은 외부 network finllm-net에서 finllm-gateway:8080을 scrape하도록 구성돼 있으나 A파트 compose는 finllm-lab-v02_default에 finllm-api로 뜬다. 또한 finllm_build_info가 없어 '지금 무엇이 돌고 있는가'를 scrape로 답할 수 없고, scripts/rollback_release.py verify의 build_info 교차검증과 provenance 패널이 동작하지 않는다(완료 조건 16).",
+      "reproduction": "docker compose --file deploy/compose.yaml config --services → vllm, finllm-api. 같은 명령에 grep -A4 '^networks:' → finllm-lab-v02_default만 존재, external 없음.",
+      "expected": "하나의 계약 문서가 양쪽 트리에 공유되고 service 이름·network·metric 이름 집합이 일치해야 한다.",
+      "actual": "계약 문서 2개 병존, 모두 불일치. Codex 문서 status는 PROPOSED_FOR_CLAUDE_REVIEW이므로 이 검토가 그 합의 절차다.",
+      "shared_responsibility": true,
+      "suggested_fix_direction": "계약을 하나로 합치고 양쪽 트리를 같은 저장소로 통합한다. 최소한 (1) network를 external finllm-net으로 통일하거나 B가 host.docker.internal:8080을 쓰도록 명시, (2) service 이름 확정, (3) finllm_build_info 추가 여부 결정 — 세 가지는 통합 전에 결론이 필요하다. metric 집합은 Codex 문서의 최소주의가 타당한 부분이 있으므로 항목별로 합의한다."
+    },
+    {
+      "id": "F8",
+      "severity": "MINOR",
+      "status": "NOT_FIXED",
+      "title": "기동 시 retriever config hash를 baseline과 대조하지 않는다",
+      "file": "scripts/deploy/start_service.sh",
+      "line": "11-13",
+      "problem": "컨테이너 기동마다 index를 재빌드하고 config-hash를 출력하지만 고정된 baseline과 대조하지 않는다.",
+      "why_it_matters": "이미지에 다른 corpus가 들어간 채 빌드되면 서비스는 품질이 측정된 적 없는 retriever로 조용히 기동한다. 응답 provenance에 retriever_config_hash가 실려 나오지만 아무도 비교하지 않으므로 사후에만 발견된다. B파트 regression gate가 CI 시점에는 잡지만 배포 시점 방어는 없다.",
+      "reproduction": "corpus/v0.1의 문서 한 글자를 바꾸고 이미지를 재빌드해 기동한다. start_service.sh가 출력하는 config-hash가 11d1f8cfeb42가 아니어도 서비스는 정상 기동하고 /ready=200이 된다.",
+      "expected": "기대 해시와 다르면 기동을 거부하거나 최소한 readiness에 반영되어야 한다.",
+      "actual": "해시를 stdout에 출력만 하고 검증 없이 :15에서 exec python -m service.app 으로 진행한다.",
+      "suggested_fix_direction": "기대 retriever_config_hash를 service.json 또는 환경변수로 주입받아 불일치 시 StartupValidationError로 종료한다. ops/baselines/profile-a-baseline.json의 retriever_config_hash가 이미 그 값을 갖고 있다."
+    }
+  ],
+
+  "acknowledged_strengths": [
+    "v0.1 기존 84개 테스트 회귀 없음 (111 tests run, OK, skipped=3)",
+    "startup fail-fast: config/corpus/index/prompt revision/model revision/inference 도달성까지 검증 후 exit 2",
+    "non-root(uid 10001), read_only 컨테이너, tmpfs /tmp, PYTHONDONTWRITEBYTECODE",
+    "base image digest 고정, Python 소스 sha256 검증, 빌드 시 vllm/torch/transformers 버전 assert (Dockerfile.vllm:54)",
+    "deploy/evidence/2026-08-09-a-part-validation.json이 NOT_EXECUTED/NOT_MEASURED를 정확히 표시한다. 허위 주장은 발견하지 못했다.",
+    "in-flight drain 메커니즘 자체는 동작한다 (F9는 마지막 응답 쓰기 구간의 경합이다)"
+  ],
+
+  "limitations": [
+    "실제 vLLM 컨테이너를 GPU에 올린 통합 검증은 하지 않았다. F6에서 확인했듯 모델 반입 경로가 없어 네트워크 없이는 기동 불가이고, 네트워크를 열면 약 9GB를 내려받는다. BLOCKER 재현은 stub 추론으로 했다.",
+    "'vLLM API server는 살아 있는데 engine만 죽는' 상태가 vLLM 0.9.2에서 실제로 발생하는지는 검증하지 못했다. F1은 '/ready가 생성 경로를 관측하지 않는다'는 성질 자체를 증명한 것이며 그 성질은 백엔드가 어떤 이유로든 생성만 실패할 때 항상 성립한다.",
+    "docker compose up을 실행하지 않았으므로 컨테이너 restart 동작, depends_on restart:true 전이, stop_grace_period 하의 drain은 미검증(PENDING_VALIDATION)이다.",
+    "이미지 빌드 재현성은 정적 확인만 했다. 재빌드로 동일 digest가 나오는지는 확인하지 않았다. apt 패키지 버전 미고정은 결함으로 제출하지 않았다.",
+    "성능·VRAM·품질은 일절 측정하지 않았다.",
+    "F9의 경합 창 폭은 정량화하지 않았다. 관측된 조건에서의 실패만 보고한다.",
+    "나는 B파트 구현자이므로 F7(계약 이원화)과 F5(내 alert 임계값이 관련됨)에 이해상충이 있다. 두 항목은 통합 시 실제로 깨지는 지점만 기술했다."
+  ],
+
+  "verdict": "accept-with-changes. 코드 품질과 정직성은 높다. 다만 F1(BLOCKER)은 '서비스가 정상인지 판단한다'는 v0.2 목표를 직접 무력화하므로 통합 전 반드시 수정해야 한다. F9는 완료 조건 6번을 겨냥하며 서버 기록과 클라이언트 결과가 어긋나 증거 신뢰성을 해친다. F2와 F9는 같은 종료 경로에 있어 함께 고치는 것이 자연스럽다. F7은 양측 공동 책임이며 통합 전 합의가 필요하다."
+}

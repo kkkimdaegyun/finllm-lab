@@ -1,0 +1,271 @@
+{
+  "schema_version": "1.0.0",
+  "deck": {
+    "title": "FinLLM Lab v0.2",
+    "subtitle": "단일 GPU 금융 Private RAG의 모델 선택부터 운영 안전성까지",
+    "language": "ko-KR",
+    "aspect_ratio": "16:9",
+    "release_verdict": "FAIL",
+    "reviewed_commit": "47cbc5a01320fb203a537392c7b209834225e05a",
+    "evidence_boundary": "성능 숫자는 A6000 memory-budget-emulation; actual 24GB native validation은 NOT_EXECUTED"
+  },
+  "theme": {
+    "background": "#08111F",
+    "surface": "#101E32",
+    "surface_alt": "#142842",
+    "text": "#F4F7FB",
+    "muted": "#9CB0C8",
+    "cyan": "#43D3C1",
+    "amber": "#F4B860",
+    "red": "#FF6B6B",
+    "line": "#29415E",
+    "font": "Noto Sans CJK KR"
+  },
+  "slides": [
+    {
+      "id": "cover",
+      "number": 1,
+      "eyebrow": "PRIVATE RAG · INFERENCE · LLMOPS",
+      "title": "FinLLM Lab",
+      "layout": "cover",
+      "content": {
+        "headline": "단일 GPU 금융 Private RAG의\n모델 선택부터 운영 안전성까지",
+        "subheadline": "측정 → 오진 수정 → 배포 설계 → 독립 검토",
+        "tags": ["On-premise", "Quantization", "vLLM", "Evaluation", "LLMOps"],
+        "verdict": "FINAL RELEASE · FAIL",
+        "verdict_note": "개별 구현은 존재하지만 A/B 통합 closed loop는 미완료"
+      },
+      "footer": "Portfolio evidence review · 2026-08-09",
+      "evidence": ["docs/final-review/final-release-review.json"]
+    },
+    {
+      "id": "problem",
+      "number": 2,
+      "eyebrow": "01 · PROBLEM & CONSTRAINTS",
+      "title": "모델 정확도만으로는 운영 구성을 고를 수 없다",
+      "layout": "constraint-grid",
+      "content": {
+        "headline": "외부 API 없이, single GPU에서, 권한을 지키며, 동시에 응답해야 했다.",
+        "cards": [
+          {"label": "DATA", "title": "금융 내부문서", "text": "외부 API 제한 · synthetic corpus로 실험"},
+          {"label": "COMPUTE", "title": "Single GPU", "text": "A6000 48GiB · target class는 별도 검증"},
+          {"label": "SERVICE", "title": "Concurrency 10", "text": "P95 TTFT ≤ 2,000ms · error ≤ 1%"},
+          {"label": "QUALITY", "title": "Quality ≥ 90", "text": "정확성 · groundedness · citation · abstention"},
+          {"label": "SECURITY", "title": "ACL violation = 0", "text": "권한 필터를 모델이 아닌 retrieval layer에 적용"},
+          {"label": "EVIDENCE", "title": "측정값의 출처", "text": "model/tokenizer/prompt/corpus/retriever revision"}
+        ]
+      },
+      "footer": "Policy source · configs/profiles.json",
+      "evidence": ["configs/profiles.json", "docs/project-brief.md"]
+    },
+    {
+      "id": "question",
+      "number": 3,
+      "eyebrow": "02 · DECISION FRAME",
+      "title": "내가 집중한 질문",
+      "layout": "question",
+      "content": {
+        "quote": "가장 큰 모델을 돌리는 것이 아니라, 제한된 GPU에서 어떤 구성이 실제로 운영 가능한가?",
+        "criteria": [
+          {"name": "Quality", "detail": "60-case deterministic evaluation"},
+          {"name": "Latency", "detail": "server TTFT ≠ user TTFT"},
+          {"name": "Throughput", "detail": "aggregate output tokens/s"},
+          {"name": "Memory", "detail": "executor budget ≠ process peak"},
+          {"name": "Security", "detail": "ACL + injection diagnostics"},
+          {"name": "Reproducibility", "detail": "immutable revisions + schema"}
+        ],
+        "rule": "추정은 후보 선정에만 사용하고, 판정은 result JSON과 actual run에만 사용"
+      },
+      "footer": "LLM의 의견은 evidence가 아니다",
+      "evidence": ["schemas/run-result.schema.json", "scripts/rag_eval.py", "scripts/load_test.py"]
+    },
+    {
+      "id": "architecture",
+      "number": 4,
+      "eyebrow": "03 · SYSTEM ARCHITECTURE",
+      "title": "의도한 closed loop와 실제 integration gap",
+      "layout": "architecture",
+      "content": {
+        "flow": [
+          {"name": "Client", "type": "actor"},
+          {"name": "FinLLM API", "detail": "/health · /ready · /metrics", "type": "service"},
+          {"name": "ACL Retriever", "detail": "frozen index", "type": "service"},
+          {"name": "vLLM", "detail": "OpenAI-compatible", "type": "service"},
+          {"name": "RTX A6000", "detail": "single GPU", "type": "hardware"}
+        ],
+        "ops": ["Prometheus", "Grafana", "Alert", "Runbook", "Rollback"],
+        "safety": ["Tests", "Schema", "CPU Gate", "GPU Gate", "Release Manifest"],
+        "gap": "A는 finllm-api/default network, B는 finllm-gateway/finllm-net. 현재 target=[]이고 metric label 계약도 불일치."
+      },
+      "footer": "의도한 구조 ≠ 현재 재현 가능한 release",
+      "evidence": ["/home/dgkim/dgkim/FinLLM:0.2/deploy/compose.yaml", "monitoring/prometheus/prometheus.yml", "docs/cross-review/interface-contract-v0.2.md"]
+    },
+    {
+      "id": "model-decision",
+      "number": 5,
+      "eyebrow": "04 · QUANTIZATION / GPU DECISION",
+      "title": "14B AWQ는 다음 native 검증 후보 — target GPU 검증 완료가 아니다",
+      "layout": "data-table",
+      "content": {
+        "table": {
+          "headers": ["구성", "Quality", "server P95", "user P95", "tok/s", "Peak", "@8192"],
+          "rows": [
+            ["8B BF16 · 0.50", "95.926", "77.329ms", "1,344.653ms", "286.955", "24.006GiB", "7.31"],
+            ["14B AWQ · 0.50", "97.667", "129.828ms", "1,310.587ms", "313.238", "23.836GiB", "11.05"],
+            ["14B AWQ · 0.46", "97.667", "129.995ms", "1,273.402ms", "315.331", "21.961GiB", "9.53"]
+          ],
+          "highlight_row": 2
+        },
+        "note": "A6000 · memory-budget-emulation · concurrency 10 · 30 requests · n=3 · error 0 · OOM 0",
+        "decision": "같은 host/workload에서 quality와 memory observation이 유리해 후속 native validation 후보로 선택"
+      },
+      "footer": "NOT_EXECUTED · actual 24GB / RTX 4090 native validation",
+      "evidence": ["results/2026-08-08c-profile-a-qwen3-8b-bf16-classceiling-eager-r1.json", "results/2026-08-08c-profile-a-qwen3-14b-awq-classceiling-eager-r1.json", "results/2026-08-08c-profile-a-qwen3-14b-awq-deploymentmatched-eager-r1.json"]
+    },
+    {
+      "id": "debugging",
+      "number": 6,
+      "eyebrow": "05 · DEBUGGING / SCIENTIFIC REASONING",
+      "title": "“AWQ라서 느리다”는 가설을 추가 실험으로 수정했다",
+      "layout": "autopsy",
+      "content": {
+        "steps": [
+          {"label": "OBSERVE", "title": "graph-enabled AWQ", "metric": "≈ 57.2 tok/s", "text": "8B BF16보다 크게 느림"},
+          {"label": "HYPOTHESIS", "title": "초기 해석", "metric": "dequant overhead?", "text": "weight format을 원인으로 의심"},
+          {"label": "CONTROL", "title": "실행 경로 변경", "metric": "--enforce-eager", "text": "model/revision/eval은 유지"},
+          {"label": "EVIDENCE", "title": "eager AWQ · n=3", "metric": "313.238 tok/s", "text": "성능 저하가 사라짐"}
+        ],
+        "corrected": "수정된 결론: 이 환경의 저성능은 graph-enabled path와 함께 나타났다. 정확한 kernel root cause는 NOT_MEASURED.",
+        "principle": "결과가 예상과 다르면 설명을 끼워 맞추지 않고 변수를 통제해 다시 측정"
+      },
+      "footer": "Unexpected result → controlled experiment → bounded conclusion",
+      "evidence": ["decisions/0004-profile-a-model-revised.md", "results/2026-08-08b-profile-a-qwen3-14b-awq-classceiling-r1.json", "results/2026-08-08c-profile-a-qwen3-14b-awq-classceiling-eager-r1.json"]
+    },
+    {
+      "id": "llmops",
+      "number": 7,
+      "eyebrow": "06 · PRODUCTION LLMOPS",
+      "title": "v0.1 measurement stack을 운영 layer로 확장했다 — 통합은 아직 미완료",
+      "layout": "evolution",
+      "content": {
+        "before": {
+          "label": "v0.1",
+          "title": "Inference + Evaluation",
+          "items": ["RAG / ACL", "60-case evaluation", "Load test", "GPU profiling", "Result schema"]
+        },
+        "after": {
+          "label": "v0.2 · separate parts",
+          "title": "Serving + Reliability",
+          "items": ["Pinned containers", "Health / readiness / metrics", "Prometheus / Grafana", "Regression gate", "Incident / rollback"]
+        },
+        "verification": [
+          {"name": "A tree", "value": "111 tests", "status": "VERIFIED", "note": "3 GPU integration skipped"},
+          {"name": "B tree", "value": "119 tests", "status": "VERIFIED", "note": "canonical main"},
+          {"name": "A+B E2E", "value": "미실행", "status": "PENDING", "note": "contracts incompatible"}
+        ]
+      },
+      "footer": "개별 component 존재는 closed loop 증거가 아니다",
+      "evidence": ["/home/dgkim/dgkim/FinLLM:0.2/deploy/evidence/2026-08-09-a-part-validation.json", "docs/final-review/final-release-review.json"]
+    },
+    {
+      "id": "incident",
+      "number": 8,
+      "eyebrow": "07 · OBSERVABILITY & INCIDENT",
+      "title": "품질 gate를 통과한 graph 변경을 GPU signal이 잡았다",
+      "layout": "timeline",
+      "content": {
+        "timeline": [
+          {"time": "BASELINE", "title": "eager", "value": "22,362 MiB", "detail": "host-vLLM baseline"},
+          {"time": "CHANGE", "title": "graph enabled", "value": "quality 97.667", "detail": "quality gate는 pass"},
+          {"time": "ALERT", "title": "FB_USED threshold", "value": "26,570 MiB", "detail": "snapshot state=firing"},
+          {"time": "DIAGNOSE", "title": "execution mode", "value": "graph capture", "detail": "ADR-0004와 방향 일치"},
+          {"time": "ROLLBACK", "title": "host restart", "value": "33.112s", "detail": "return code 0"},
+          {"time": "RECOVER", "title": "baseline", "value": "22,362 MiB", "detail": "vLLM up=1"}
+        ],
+        "lesson": "pre-deploy quality gate와 post-deploy capacity alert는 서로 다른 실패를 본다.",
+        "caveat": "activeAt는 firing 시각이 아니다. container digest rollback과 user downtime은 PENDING_VALIDATION / NOT_MEASURED."
+      },
+      "footer": "의도적 실험 · 실제 고객 장애 아님",
+      "evidence": ["ops/incidents/INC-002-graph-enabled-vram-rollback.md", "ops/evidence/rollback-demo/03-alerts-graph-enabled.json", "ops/release/rollback-log.jsonl"]
+    },
+    {
+      "id": "ai-process",
+      "number": 9,
+      "eyebrow": "08 · AI-ASSISTED ENGINEERING",
+      "title": "LLM을 구현자·검토자로 쓰되, 최종 판정권은 주지 않았다",
+      "layout": "review-loop",
+      "content": {
+        "lanes": [
+          {"owner": "Codex · A", "scope": "Serving / Deployment", "outputs": ["service/", "deploy/", "service tests"]},
+          {"owner": "Claude · B", "scope": "Observability / Reliability", "outputs": ["monitoring/", "ops/", "regression / CI"]}
+        ],
+        "loop": ["Interface Contract", "Independent Build", "Cross Review", "Reproduction", "Deterministic Gate"],
+        "findings": [
+          "empty Prometheus target + metric mismatch",
+          "stale evaluation / zero-stage pass",
+          "failed rollback mutates active state"
+        ],
+        "judge": "LLM opinion < test · schema · command output · actual GPU evidence"
+      },
+      "footer": "AI output를 trust한 것이 아니라 evidence로 통제했다",
+      "evidence": ["docs/cross-review/", "docs/final-review/final-release-review.json"]
+    },
+    {
+      "id": "lessons",
+      "number": 10,
+      "eyebrow": "09 · WHAT I ACTUALLY LEARNED",
+      "title": "도구보다 중요한 것은 경계를 정의하고 실패를 판정하는 법이었다",
+      "layout": "learning-grid",
+      "content": {
+        "cards": [
+          {"title": "GPU memory", "text": "executor budget ≠ process peak ≠ native card fit"},
+          {"title": "Latency", "text": "server TTFT ≠ queue wait ≠ user TTFT"},
+          {"title": "Quantization", "text": "weight format과 execution path를 분리해 실험"},
+          {"title": "Readiness", "text": "process liveness, dependency, admission을 분리"},
+          {"title": "Prometheus", "text": "name뿐 아니라 labels / buckets가 contract"},
+          {"title": "Regression", "text": "정상 PASS보다 stale/skip/crash가 fail closed인지 확인"},
+          {"title": "Rollback", "text": "immutable target → restart → ready → state commit"},
+          {"title": "Provenance", "text": "숫자의 source가 없으면 재사용 가능한 evidence가 아님"}
+        ]
+      },
+      "footer": "Senior-level claim이 아니라, 검증 가능한 engineering judgment",
+      "evidence": ["docs/final-report/final-report.md"]
+    },
+    {
+      "id": "limitations",
+      "number": 11,
+      "eyebrow": "10 · REMAINING LIMITATIONS",
+      "title": "완료되지 않은 것을 release 성공으로 쓰지 않았다",
+      "layout": "risk-register",
+      "content": {
+        "risks": [
+          {"severity": "BLOCKER", "title": "A/B integration", "status": "NOT_IN_ONE_COMMIT", "next": "single contract + canonical merge"},
+          {"severity": "BLOCKER", "title": "Application observability", "status": "TARGET_EMPTY", "next": "scrape real A metrics + alerts"},
+          {"severity": "BLOCKER", "title": "Regression fail-open", "status": "REPRODUCED", "next": "fresh output + nonzero + min executed stages"},
+          {"severity": "BLOCKER", "title": "Rollback atomicity", "status": "REPRODUCED", "next": "digest + ready before state commit"},
+          {"severity": "MAJOR", "title": "Prompt injection", "status": "2 / 5", "next": "defence experiment without threshold drift"},
+          {"severity": "PENDING", "title": "Native target", "status": "NOT_EXECUTED", "next": "actual 24GB GPU validation"}
+        ],
+        "verdict": "FAIL · DO_NOT_RELEASE",
+        "note": "synthetic corpus 16 docs · evaluation 60 cases · single A6000"
+      },
+      "footer": "실패 판정도 프로젝트의 evidence다",
+      "evidence": ["docs/final-review/final-release-review.json"]
+    },
+    {
+      "id": "summary",
+      "number": 12,
+      "eyebrow": "11 · RESUME / INTERVIEW SUMMARY",
+      "title": "측정 가능한 질문을 만들고, 예상과 다른 결과를 다시 실험했다",
+      "layout": "summary",
+      "content": {
+        "pitch": "단일 A6000 금융 RAG에서 품질·TTFT·처리량·VRAM·ACL을 같은 provenance로 비교했습니다. AWQ 저성능의 초기 해석을 eager 통제 실험으로 수정하고 운영 layer까지 확장했습니다. 마지막에는 AI 구현의 테스트 개수보다 negative-path 재현을 우선해 release를 보류했습니다.",
+        "stack": ["Python", "PyTorch", "vLLM 0.9.2", "Qwen3", "AWQ", "Docker Compose", "Prometheus", "Grafana", "GitHub Actions"],
+        "next": ["v0.2 integration blockers", "Quantization Autopsy", "Whisper / K-Voice", "Master's Thesis"],
+        "closing": "Implementation by AI agents. Judgment by contracts, tests, schema and measurement."
+      },
+      "footer": "Full evidence map · docs/final-report/final-report.md",
+      "evidence": ["docs/final-report/resume-interview-summary.md"]
+    }
+  ]
+}
