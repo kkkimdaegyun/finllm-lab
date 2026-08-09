@@ -1,7 +1,7 @@
 # FinLLM Lab v0.2 integrated interface contract
 
 Status: `ACCEPTED_FOR_RELEASE_REHEARSAL`
-Scope: canonical tree `/home/dgkim/dgkim/FinLLM-0.2`
+Scope: canonical tree `/home/dgkim/dgkim/finllm-lab`
 
 두 개로 갈라졌던 A/B 계약을 이 문서로 대체한다. `service/`, `deploy/`,
 `monitoring/`, regression과 rollback은 이 계약을 함께 사용한다.

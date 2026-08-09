@@ -6,8 +6,8 @@
 # A파트 트리를 읽기만 한다. CUDA/드라이버는 건드리지 않는다.
 
 set -uo pipefail
-A_ROOT="${FINLLM_A_ROOT:-/home/dgkim/dgkim/FinLLM:0.2}"
-B_ROOT="${FINLLM_B_ROOT:-/home/dgkim/dgkim/FinLLM-0.2}"
+A_ROOT="${FINLLM_A_ROOT:-/home/dgkim/dgkim/finllm-lab}"
+B_ROOT="${FINLLM_B_ROOT:-/home/dgkim/dgkim/finllm-lab}"
 VLLM_IMAGE="${FINLLM_VLLM_IMAGE:-finllm-vllm:0.2-vllm0.9.2-cuda12.2.2}"
 cd "$A_ROOT"
 

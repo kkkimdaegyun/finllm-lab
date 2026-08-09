@@ -3,7 +3,8 @@
 A파트 트리를 읽기만 한다. 어떤 파일도 수정하지 않는다.
 
 환경변수로 경로를 바꿀 수 있다.
-    FINLLM_A_ROOT     A파트 저장소 (기본 /home/dgkim/dgkim/FinLLM:0.2)
+    FINLLM_A_ROOT     service/ deploy/ 가 있는 저장소 (기본: 통합 트리)
+                      검토 당시 A파트는 별도 트리에 있었고 통합 후 삭제됐다.
     FINLLM_PYTHON     httpx/jsonschema가 설치된 python
     FINLLM_REPRO_WORK 임시 산출물 디렉터리 (기본 /tmp/finllm-repro)
 """
@@ -16,7 +17,7 @@ import subprocess
 import time
 from pathlib import Path
 
-A_ROOT = Path(os.environ.get("FINLLM_A_ROOT", "/home/dgkim/dgkim/FinLLM:0.2"))
+A_ROOT = Path(os.environ.get("FINLLM_A_ROOT", "/home/dgkim/dgkim/finllm-lab"))
 PYTHON = os.environ.get("FINLLM_PYTHON", "/home/dgkim/dgkim/new_project/.venv/bin/python")
 WORK = Path(os.environ.get("FINLLM_REPRO_WORK", "/tmp/finllm-repro"))
 HERE = Path(__file__).resolve().parent
