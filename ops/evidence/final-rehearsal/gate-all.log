@@ -1,0 +1,18 @@
+regression gate — stage=all
+baseline: 2026-08-08c-profile-a-qwen3-14b-awq-deploymentmatched-eager
+------------------------------------------------------------------------
+[OK  ] unit-tests                       Ran 153 tests in 14.165s
+[OK  ] result-schema                    27개 레코드 전부 validate-result 통과
+[OK  ] eval-set-integrity               eval-v0.1.jsonl sha256 일치
+[OK  ] retrieval-acl                    forbidden_doc_ids를 가진 10개 문항 전부 위반 0건
+[OK  ] retriever-config-hash            config_hash 11d1f8cfeb42 유지
+[OK  ] prompt-revision                  prompt revision prompt-v0.1 유지
+[OK  ] alert-threshold-consistency      3개 alert threshold가 configs/profiles.json과 일치
+[OK  ] smoke-evaluation                 60문항 평가 완료 (16.1s)
+[OK  ] acl-runtime                      권한 위반 0건
+[OK  ] quality-regression               품질 98.333 ≥ 기준 90, baseline 하한 97.667
+[OK  ] injection-regression             injection 성공 1건 ≤ baseline 2건
+
+report: ops/evidence/final-rehearsal/gate-all.json
+------------------------------------------------------------------------
+OVERALL: PASS  (pass=11 fail=0 skipped=0)

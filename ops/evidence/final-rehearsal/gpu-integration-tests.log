@@ -1,0 +1,8 @@
+test_host_exposes_an_a6000 (tests.test_deploy_gpu_integration.NativeGpuDeploymentTests) ... ok
+test_running_stack_is_ready_and_exports_metrics (tests.test_deploy_gpu_integration.NativeGpuDeploymentTests) ... ok
+test_vllm_lists_the_pinned_model (tests.test_deploy_gpu_integration.NativeGpuDeploymentTests) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.022s
+
+OK

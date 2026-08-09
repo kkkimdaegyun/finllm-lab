@@ -1,0 +1,78 @@
+# HELP finllm_requests_total Accepted and rejected RAG requests.
+# TYPE finllm_requests_total counter
+finllm_requests_total 0
+# HELP finllm_request_errors_total RAG requests that failed or were rejected.
+# TYPE finllm_request_errors_total counter
+finllm_request_errors_total 0
+# HELP finllm_requests_in_flight Accepted RAG requests still executing.
+# TYPE finllm_requests_in_flight gauge
+finllm_requests_in_flight 0
+# HELP finllm_ready Whether the service accepts production traffic.
+# TYPE finllm_ready gauge
+finllm_ready 1
+# HELP finllm_shutdown_in_progress Whether graceful drain is active.
+# TYPE finllm_shutdown_in_progress gauge
+finllm_shutdown_in_progress 0
+# HELP finllm_request_duration_seconds End-to-end duration of accepted RAG requests.
+# TYPE finllm_request_duration_seconds histogram
+finllm_request_duration_seconds_bucket{le="0.005"} 0
+finllm_request_duration_seconds_bucket{le="0.01"} 0
+finllm_request_duration_seconds_bucket{le="0.025"} 0
+finllm_request_duration_seconds_bucket{le="0.05"} 0
+finllm_request_duration_seconds_bucket{le="0.1"} 0
+finllm_request_duration_seconds_bucket{le="0.25"} 0
+finllm_request_duration_seconds_bucket{le="0.5"} 0
+finllm_request_duration_seconds_bucket{le="1"} 0
+finllm_request_duration_seconds_bucket{le="2"} 0
+finllm_request_duration_seconds_bucket{le="2.5"} 0
+finllm_request_duration_seconds_bucket{le="5"} 0
+finllm_request_duration_seconds_bucket{le="10"} 0
+finllm_request_duration_seconds_bucket{le="30"} 0
+finllm_request_duration_seconds_bucket{le="60"} 0
+finllm_request_duration_seconds_bucket{le="180"} 0
+finllm_request_duration_seconds_bucket{le="+Inf"} 0
+finllm_request_duration_seconds_sum 0
+finllm_request_duration_seconds_count 0
+# HELP finllm_retrieval_duration_seconds Duration of local ACL-filtered retrieval.
+# TYPE finllm_retrieval_duration_seconds histogram
+finllm_retrieval_duration_seconds_bucket{le="0.005"} 0
+finllm_retrieval_duration_seconds_bucket{le="0.01"} 0
+finllm_retrieval_duration_seconds_bucket{le="0.025"} 0
+finllm_retrieval_duration_seconds_bucket{le="0.05"} 0
+finllm_retrieval_duration_seconds_bucket{le="0.1"} 0
+finllm_retrieval_duration_seconds_bucket{le="0.25"} 0
+finllm_retrieval_duration_seconds_bucket{le="0.5"} 0
+finllm_retrieval_duration_seconds_bucket{le="1"} 0
+finllm_retrieval_duration_seconds_bucket{le="2"} 0
+finllm_retrieval_duration_seconds_bucket{le="2.5"} 0
+finllm_retrieval_duration_seconds_bucket{le="5"} 0
+finllm_retrieval_duration_seconds_bucket{le="10"} 0
+finllm_retrieval_duration_seconds_bucket{le="30"} 0
+finllm_retrieval_duration_seconds_bucket{le="60"} 0
+finllm_retrieval_duration_seconds_bucket{le="180"} 0
+finllm_retrieval_duration_seconds_bucket{le="+Inf"} 0
+finllm_retrieval_duration_seconds_sum 0
+finllm_retrieval_duration_seconds_count 0
+# HELP finllm_generation_duration_seconds Duration of the inference-server generation call.
+# TYPE finllm_generation_duration_seconds histogram
+finllm_generation_duration_seconds_bucket{le="0.005"} 0
+finllm_generation_duration_seconds_bucket{le="0.01"} 0
+finllm_generation_duration_seconds_bucket{le="0.025"} 0
+finllm_generation_duration_seconds_bucket{le="0.05"} 0
+finllm_generation_duration_seconds_bucket{le="0.1"} 0
+finllm_generation_duration_seconds_bucket{le="0.25"} 0
+finllm_generation_duration_seconds_bucket{le="0.5"} 0
+finllm_generation_duration_seconds_bucket{le="1"} 0
+finllm_generation_duration_seconds_bucket{le="2"} 0
+finllm_generation_duration_seconds_bucket{le="2.5"} 0
+finllm_generation_duration_seconds_bucket{le="5"} 0
+finllm_generation_duration_seconds_bucket{le="10"} 0
+finllm_generation_duration_seconds_bucket{le="30"} 0
+finllm_generation_duration_seconds_bucket{le="60"} 0
+finllm_generation_duration_seconds_bucket{le="180"} 0
+finllm_generation_duration_seconds_bucket{le="+Inf"} 0
+finllm_generation_duration_seconds_sum 0
+finllm_generation_duration_seconds_count 0
+# HELP finllm_build_info Immutable service and model provenance.
+# TYPE finllm_build_info gauge
+finllm_build_info{corpus_version="v0.1",eval_set_version="eval-v0.1",git_sha="95dd24deba5669919e12b8535dbaf3128646ae5e",image_digest="sha256:16986083cba5b7c775ad40cf0cee17dd6680fe5b00b03d3be0a7c14e99270feb",model_id="Qwen/Qwen3-14B-AWQ",model_revision="31c69efc29464b6bb0aee1398b5a7b50a99340c3",prompt_revision="prompt-v0.1",retriever_config_hash="11d1f8cfeb42",tokenizer_revision="31c69efc29464b6bb0aee1398b5a7b50a99340c3"} 1

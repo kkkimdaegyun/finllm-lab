@@ -16,6 +16,7 @@ Canonical repository root에서 실행한다.
 ```bash
 python3 scripts/build_final_report.py
 python3 scripts/build_portfolio.py
+python3 scripts/render_pptx_preview.py
 python3 scripts/validate_final_artifacts.py
 ```
 
@@ -26,6 +27,8 @@ artifacts/FinLLM-Lab-v0.2-Final-Technical-Report.pdf
 artifacts/FinLLM-Lab-v0.2-Developer-Portfolio.pptx
 portfolio/assets/previews/report-contact-sheet.png
 portfolio/assets/previews/html-contact-sheet.png
+portfolio/assets/previews/pptx-contact-sheet.png
+artifacts/rendered/FinLLM-Lab-v0.2-Developer-Portfolio.pdf
 ```
 
 HTML은 다음 명령으로 로컬에서 확인한다.
@@ -35,14 +38,15 @@ python3 -m http.server 8765 --directory portfolio
 # http://127.0.0.1:8765/index.html
 ```
 
-PPTX는 `slide-data.json`의 text/table/shape를 `python-pptx` 객체로 생성한다. 슬라이드 전체를 이미지로 붙이지 않는다. LibreOffice/PowerPoint renderer가 설치된 환경에서는 다음 검증을 추가한다.
+PPTX는 `slide-data.json`의 text/table/shape를 `python-pptx` 객체로 생성한다. 슬라이드 전체를 이미지로 붙이지 않는다. LibreOffice/PowerPoint renderer로 다음 검증을 추가한다.
 
 ```bash
-libreoffice --headless --convert-to pdf --outdir artifacts/rendered \
-  artifacts/FinLLM-Lab-v0.2-Developer-Portfolio.pptx
+python3 scripts/render_pptx_preview.py
 ```
 
-현재 host에는 LibreOffice/PowerPoint renderer가 없으면 PPTX visual rendering은 `PENDING_VALIDATION`으로 남긴다. 이 경우 validator는 OOXML 구조, slide size, editable object count, text clipping heuristic과 HTML 동등성을 검사하지만 실제 PowerPoint layout engine의 결과를 대체하지 않는다.
+`FINLLM_SOFFICE`로 LibreOffice executable 경로를 지정할 수도 있다. 최종 audit에서는
+LibreOffice 7.3.7 Impress로 12쪽 PDF를 실제 생성하고 contact sheet와 개별 slide를
+검토했다. validator는 이 PDF의 12쪽 여부와 OOXML의 editable object도 함께 검사한다.
 
 ## Editing
 

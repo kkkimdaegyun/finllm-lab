@@ -1,0 +1,33 @@
+ Container finllm-lab-v02-finllm-api-1 Stopping
+ Container finllm-lab-v02-finllm-api-1 Stopped
+ Container finllm-lab-v02-finllm-api-1 Removing
+ Container finllm-lab-v02-finllm-api-1 Removed
+ Container finllm-lab-v02-vllm-1 Stopping
+ Container finllm-lab-v02-vllm-1 Stopped
+ Container finllm-lab-v02-vllm-1 Removing
+ Container finllm-lab-v02-vllm-1 Removed
+ Volume finllm-lab-v02_finllm-vllm-cache Removing
+ Volume finllm-lab-v02_finllm-service-data Removing
+ Volume finllm-lab-v02_finllm-vllm-cache Removed
+ Volume finllm-lab-v02_finllm-service-data Removed
+ Container finllm-dcgm-exporter Stopping
+ Container finllm-grafana Stopping
+ Container finllm-grafana Stopped
+ Container finllm-grafana Removing
+ Container finllm-grafana Removed
+ Container finllm-prometheus Stopping
+ Container finllm-dcgm-exporter Stopped
+ Container finllm-dcgm-exporter Removing
+ Container finllm-prometheus Stopped
+ Container finllm-prometheus Removing
+ Container finllm-prometheus Removed
+ Container finllm-dcgm-exporter Removed
+ Volume finllm-monitoring_prometheus-data Removing
+ Volume finllm-monitoring_grafana-data Removing
+ Volume finllm-monitoring_grafana-data Removed
+ Volume finllm-monitoring_prometheus-data Removed
+Untagged: finllm-api:0.2-python3.10.12
+Deleted: sha256:16986083cba5b7c775ad40cf0cee17dd6680fe5b00b03d3be0a7c14e99270feb
+Untagged: finllm-vllm:0.2-vllm0.9.2-cuda12.2.2
+Deleted: sha256:ec36cea2d1d23d28bc5ce56d33ab1bc5f96258a870181b161d1df8269fd99a3d
+finllm-net

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FinLLM Lab v0.2 · Developer Portfolio</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main id="deck" aria-live="polite"></main>
+  <script>
+    const esc = value => String(value ?? "").replace(/[&<>\"]/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
+    const items = values => `<ul>${values.map(v => `<li>${esc(v)}</li>`).join("")}</ul>`;
+    const cards = values => `<div class="cards">${values.map(v => `<article class="card"><span>${esc(v.label || v.severity || "")}</span><h3>${esc(v.title)}</h3><p>${esc(v.text || v.status || "")}</p>${v.next ? `<small>Next · ${esc(v.next)}</small>` : ""}</article>`).join("")}</div>`;
+
+    function renderContent(slide) {
+      const c = slide.content;
+      if (slide.layout === "cover") return `
+        <div class="cover-copy"><h2>${esc(c.headline).replace(/\n/g,"<br>")}</h2><p>${esc(c.subheadline)}</p>
+        <div class="tags">${c.tags.map(t => `<span>${esc(t)}</span>`).join("")}</div></div>
+        <aside class="verdict pass"><b>${esc(c.verdict)}</b><small>${esc(c.verdict_note)}</small></aside>`;
+      if (slide.layout === "constraint-grid") return `<p class="lead">${esc(c.headline)}</p>${cards(c.cards)}`;
+      if (slide.layout === "question") return `<blockquote>${esc(c.quote)}</blockquote><div class="criteria">${c.criteria.map(v => `<article><b>${esc(v.name)}</b><span>${esc(v.detail)}</span></article>`).join("")}</div><p class="rule">${esc(c.rule)}</p>`;
+      if (slide.layout === "architecture") return `<div class="flow">${c.flow.map((v,i) => `${i?'<i>→</i>':''}<article><b>${esc(v.name)}</b><span>${esc(v.detail)}</span></article>`).join("")}</div><div class="rails"><section><b>OBSERVE</b>${items(c.ops)}</section><section><b>CHANGE SAFETY</b>${items(c.safety)}</section></div><p class="status-line">${esc(c.status)}</p>`;
+      if (slide.layout === "data-table") return `<table><thead><tr>${c.table.headers.map(v=>`<th>${esc(v)}</th>`).join("")}</tr></thead><tbody>${c.table.rows.map((row,i)=>`<tr class="${i===c.table.highlight_row?'highlight':''}">${row.map(v=>`<td>${esc(v)}</td>`).join("")}</tr>`).join("")}</tbody></table><p class="note">${esc(c.note)}</p><p class="decision">${esc(c.decision)}</p>`;
+      if (slide.layout === "autopsy") return `<div class="steps">${c.steps.map((v,i)=>`${i?'<i>→</i>':''}<article><span>${esc(v.label)}</span><h3>${esc(v.title)}</h3><b>${esc(v.metric)}</b><p>${esc(v.text)}</p></article>`).join("")}</div><p class="decision">${esc(c.corrected)}</p><p class="rule">${esc(c.principle)}</p>`;
+      if (slide.layout === "evolution") return `<div class="evolution"><section><span>${esc(c.before.label)}</span><h2>${esc(c.before.title)}</h2>${items(c.before.items)}</section><i>→</i><section><span>${esc(c.after.label)}</span><h2>${esc(c.after.title)}</h2>${items(c.after.items)}</section></div><div class="verification">${c.verification.map(v=>`<article><span class="ok">${esc(v.status)}</span><b>${esc(v.name)}</b><strong>${esc(v.value)}</strong><small>${esc(v.note)}</small></article>`).join("")}</div>`;
+      if (slide.layout === "timeline") return `<div class="timeline">${c.timeline.map(v=>`<article><span>${esc(v.time)}</span><h3>${esc(v.title)}</h3><b>${esc(v.value)}</b><p>${esc(v.detail)}</p></article>`).join("")}</div><p class="decision">${esc(c.lesson)}</p><p class="note">${esc(c.caveat)}</p>`;
+      if (slide.layout === "review-loop") return `<div class="lanes">${c.lanes.map(v=>`<section><span>${esc(v.owner)}</span><h3>${esc(v.scope)}</h3>${items(v.outputs)}</section>`).join("")}</div><div class="loop">${c.loop.map((v,i)=>`${i?'<i>→</i>':''}<b>${esc(v)}</b>`).join("")}</div><div class="findings">${items(c.findings)}<strong>${esc(c.judge)}</strong></div>`;
+      if (slide.layout === "learning-grid") return cards(c.cards);
+      if (slide.layout === "risk-register") return `${cards(c.risks)}<div class="verdict-inline"><b>${esc(c.verdict)}</b><span>${esc(c.note)}</span></div>`;
+      if (slide.layout === "summary") return `<blockquote class="pitch">${esc(c.pitch)}</blockquote><div class="summary-grid"><section><b>CORE STACK</b><div class="tags">${c.stack.map(v=>`<span>${esc(v)}</span>`).join("")}</div></section><section><b>NEXT</b>${items(c.next)}</section></div><p class="closing">${esc(c.closing)}</p>`;
+      return `<pre>${esc(JSON.stringify(c,null,2))}</pre>`;
+    }
+
+    fetch("slide-data.json").then(r => r.json()).then(data => {
+      const selected = Number(new URLSearchParams(location.search).get("slide") || 0);
+      const slides = selected ? data.slides.filter(s => s.number === selected) : data.slides;
+      document.documentElement.style.setProperty("--bg", data.theme.background);
+      document.documentElement.style.setProperty("--surface", data.theme.surface);
+      document.documentElement.style.setProperty("--surface-alt", data.theme.surface_alt);
+      document.documentElement.style.setProperty("--text", data.theme.text);
+      document.documentElement.style.setProperty("--muted", data.theme.muted);
+      document.documentElement.style.setProperty("--cyan", data.theme.cyan);
+      document.documentElement.style.setProperty("--amber", data.theme.amber);
+      document.documentElement.style.setProperty("--green", data.theme.green);
+      document.documentElement.style.setProperty("--line", data.theme.line);
+      document.getElementById("deck").innerHTML = slides.map(slide => `<section class="slide ${esc(slide.layout)}">
+        <header><span>${esc(slide.eyebrow)}</span><em>${String(slide.number).padStart(2,"0")}</em><h1>${esc(slide.title)}</h1></header>
+        <div class="content">${renderContent(slide)}</div>
+        <footer><span>${esc(slide.footer)}</span><small>EVIDENCE · ${esc(slide.evidence[0])}</small></footer>
+      </section>`).join("");
+      document.body.classList.toggle("single", Boolean(selected));
+      document.fonts.ready.then(() => { window.__FINLLM_READY__ = true; });
+    }).catch(error => { document.getElementById("deck").textContent = error.stack; });
+  </script>
+</body>
+</html>

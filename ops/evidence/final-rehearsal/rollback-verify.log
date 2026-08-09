@@ -1,0 +1,4 @@
+declared release: 2026-08-09-v02-container-good
+declared model  : Qwen/Qwen3-14B-AWQ @ 31c69efc2946
+
+VERIFY: OK — 선언된 release와 실제 서비스가 일치한다

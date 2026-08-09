@@ -1,0 +1,1 @@
+{"status": "ready", "checks": {"application_initialized": true, "retriever_initialized": true, "inference_endpoint_reachable": true, "model_ready": true, "accepting_requests": true}, "checked_at_utc": "2026-08-09T23:09:38.699049+00:00", "detail": "model listed by inference endpoint"}

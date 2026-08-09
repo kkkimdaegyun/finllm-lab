@@ -1,100 +1,83 @@
 # Claude handoff — FinLLM Lab v0.2 final artifacts
 
-## 1. 최종 프로젝트 요약
+## 1. 최종 프로젝트 요약과 verdict
 
-v0.1의 평가·측정 stack을 serving과 operational safety로 확장했다. A serving/deployment와 B observability/reliability에는 각각 검증 가능한 구현이 있으나, 서로 다른 directory와 contract에 남아 한 release로 통합되지 않았다. final report와 portfolio는 이 상태를 성공으로 포장하지 않고, 측정·오진 수정·negative-path review를 핵심 기술 사례로 구성한다.
+v0.1의 evaluation/measurement stack을 pinned serving, observability, fail-closed gate,
+incident, immutable rollback으로 확장했다. canonical repository의 actual RTX A6000 GPU 1
+통합 rehearsal을 기준으로 최종 판정은 **PASS · single-A6000 v0.2 scope**다.
 
-## 2. Final Judge verdict
+제품 판정과 artifact build 판정은 별개다. 제품 근거는
+`docs/final-review/final-release-review.json`, 실행 증거는
+`ops/evidence/final-rehearsal/`에 있다.
 
-`FAIL / DO_NOT_RELEASE`
+## 2. 아직 논쟁 가능한 판단
 
-근거는 `docs/final-review/final-release-review.json`에 구조화돼 있다. 핵심 blocker는 A/B 미통합, A metric과 B PromQL 불일치, stale evaluation fail-open, zero-stage pass, rollback state mutation이다.
+- PASS는 single-A6000 Compose reference 범위다. production traffic, HA, actual 24GB
+  native fit까지 확대하면 안 된다.
+- AWQ diagnosis는 graph-enabled path와의 연관까지만 사실이다. kernel root cause는
+  `NOT_MEASURED`다.
+- alert `for:`와 rate window는 실제 장기 traffic 근거가 없어
+  `PENDING_THRESHOLD_VALIDATION`이다.
+- injection success 1/5는 회귀되지 않았지만 해결된 문제가 아니다.
 
-## 3. 논쟁 가능한 판단
+## 3. 수정 가능한 source와 build
 
-- Gate 5 Incident를 pass로 두되 caveat를 붙였다. 실제 host-vLLM incident/alert/rollback evidence가 있기 때문이다. 이것을 integrated release incident pass로 확대하면 안 된다.
-- A6000 0.46 AWQ를 “다음 native 검증 후보”로 설명했다. “24GB 배포 적합”으로 바꾸면 evidence boundary를 넘는다.
-- AWQ diagnosis는 graph-enabled path와의 연관까지만 locked fact다. 정확한 kernel root cause는 `NOT_MEASURED`다.
+| Artifact | Source | Build command |
+|---|---|---|
+| PDF | `docs/final-report/final-report.md` | `python3 scripts/build_final_report.py` |
+| HTML/PPTX | `portfolio/slide-data.json`, `index.html`, `styles.css` | `python3 scripts/build_portfolio.py` |
+| validation | 위 모든 source | `python3 scripts/validate_final_artifacts.py` |
 
-## 4. PDF source
+PPTX의 text, table, shape는 python-pptx object다. HTML screenshot은 preview용이며
+PPTX slide background로 사용하지 않는다.
 
-- `docs/final-report/final-report.md`
-- `docs/final-report/BUILD.md`
-- builder: `scripts/build_final_report.py`
+## 4. slide-data 구조
 
-## 5. PPT/HTML source
+각 slide는 `number`, `title`, `eyebrow`, `layout`, `content`, `footer`, `evidence`를
+가진다. layout별 content는 cards/table/flow/timeline/steps 등 구조화된 값이다. 문장,
+순서, 표 값은 JSON에서 수정해야 HTML과 PPTX가 같은 source를 유지한다.
 
-- shared content: `portfolio/slide-data.json`
-- HTML shell: `portfolio/index.html`
-- style: `portfolio/styles.css`
-- PPTX/preview builder: `scripts/build_portfolio.py`
+## 5. Actual benchmark/evidence source
 
-## 6. slide-data 구조
+- v0.1 성능: `results/2026-08-08c-*.json`
+- schema/policy: `schemas/run-result.schema.json`, `configs/profiles.json`
+- v0.2 gate: `ops/evidence/final-rehearsal/gate-all.json`
+- actual service/metrics/GPU: `ops/evidence/final-rehearsal/`
+- incident: `ops/incidents/INC-003-api-outage-container-rollback.md`
+- release: `ops/release/history/2026-08-09-v02-container-good.json`
 
-각 slide는 `id`, `number`, `title`, `eyebrow`, `layout`, `content`, `footer`, `evidence`를 가진다. `content`에는 layout에 따라 `headline`, `bullets`, `stats`, `table`, `flow`, `timeline`, `columns`, `tags`가 들어간다. HTML과 PPTX는 같은 JSON을 읽는다. 문장/순서/표 숫자는 JSON에서만 바꾸는 것이 원칙이다.
+## 6. LOCKED_FACT
 
-## 7. PPTX 생성
+- Release source Git SHA: `95dd24deba5669919e12b8535dbaf3128646ae5e`.
+- API image: `sha256:16986083cba5b7c775ad40cf0cee17dd6680fe5b00b03d3be0a7c14e99270feb`.
+- Model/tokenizer revision: `31c69efc29464b6bb0aee1398b5a7b50a99340c3`.
+- Actual A6000 all-stage gate: 153 tests, 27 results, 11/11 stages, quality 98.333,
+  ACL 0, injection success 1.
+- Actual drain: 20/20 client bodies complete, failed 0.
+- Actual alert detection: 43.765s from SIGTERM to alert activeAt.
+- Successful rollback command: 6.332s and post-readiness/build-info verify PASS.
+- v0.1 14B AWQ 0.46 eager n=3 mean: quality 97.667, server P95 129.995ms,
+  user P95 1,273.402ms, output 315.331 tok/s, peak 21.961GiB.
+- 모든 v0.1 24GB-class 수치는 A6000 `memory-budget-emulation`이다.
+- actual 24GB native validation과 remote GPU CI run은 `NOT_EXECUTED`다.
 
-```bash
-python3 scripts/build_portfolio.py
-```
+LOCKED_FACT를 변경하려면 source JSON/command output과 새 독립 재현을 먼저 추가한다.
 
-텍스트·표·도형은 PowerPoint object다. HTML screenshot을 PPTX slide background로 쓰지 않는다.
+## 7. EDITABLE_NARRATIVE
 
-## 8. PDF 생성
-
-```bash
-python3 scripts/build_final_report.py
-```
-
-## 9. Actual benchmark sources
-
-- `results/2026-08-08c-profile-a-qwen3-8b-bf16-classceiling-eager-r{1,2,3}.json`
-- `results/2026-08-08c-profile-a-qwen3-14b-awq-classceiling-eager-r{1,2,3}.json`
-- `results/2026-08-08c-profile-a-qwen3-14b-awq-deploymentmatched-eager-r{1,2,3}.json`
-- schema: `schemas/run-result.schema.json`
-- policy: `configs/profiles.json`
-
-## 10. LOCKED_FACT
-
-- Canonical B Git commit reviewed: `47cbc5a01320fb203a537392c7b209834225e05a`.
-- A는 `/home/dgkim/dgkim/FinLLM:0.2`, B canonical Git은 `/home/dgkim/dgkim/FinLLM-0.2`에 있고 통합되지 않았다.
-- A audit run: 111 tests, 3 opt-in native GPU tests skipped.
-- B audit run: 119 tests pass.
-- 각 tree의 27 result JSON이 schema validator를 통과했다.
-- 모든 2026-08-08c performance result는 A6000 `memory-budget-emulation`이다.
-- 14B AWQ 0.46 eager n=3 평균: quality 97.667, server P95 TTFT 129.995ms, user P95 TTFT 1273.402ms, output 315.331 tok/s, peak 21.961GiB.
-- prompt injection success 2/5, ACL violations 0.
-- B gateway target file is empty and A/B metric contract is incompatible.
-- regression and rollback fail-open reproductions in final review are release blockers.
-
-LOCKED_FACT를 바꾸려면 source JSON/command output과 새 독립 재현을 먼저 추가한다.
-
-## 11. EDITABLE_NARRATIVE
-
-- slide title과 한 줄 요약
-- 기술 스토리의 순서
-- 표를 설명하는 문장
-- 면접용 요약의 톤과 길이
+- slide title, 한 줄 요약, 설명 순서
+- 같은 사실을 전달하는 table/flow 시각 구조
+- 면접용 문장의 톤과 길이
 - 색상, spacing, typography
 
-Narrative를 바꿔도 FAIL을 PASS로 바꾸거나 evidence scope를 확대할 수 없다.
+표현을 수정해도 evidence scope를 확대하거나 `NOT_EXECUTED`를 지울 수 없다.
 
-## 12. PENDING_VALIDATION / limitations
+## 8. PENDING_VALIDATION / limitations
 
-- 실제 A6000 A+B Compose end-to-end
-- real A service Prometheus scrape and alerts
-- in-flight drain under real traffic
-- fail-closed regression/promotion fixes
-- immutable image digest rollback + `/ready`
-- actual 24GB native GPU validation
-- PPTX의 PowerPoint/LibreOffice 실제 렌더링(해당 renderer가 없는 host에서는 structural validation만 가능)
+- actual 24GB native GPU
+- production corpus/traffic
+- long-duration alert window calibration
+- remote self-hosted A6000 GitHub CI execution
+- high availability / zero-downtime model swap
 
-수정 후 다음을 모두 다시 실행한다.
-
-```bash
-python3 scripts/build_final_report.py
-python3 scripts/build_portfolio.py
-python3 scripts/validate_final_artifacts.py
-PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
-```
+수정 후 PDF, HTML, PPTX를 모두 rebuild하고 validator와 test suite를 다시 실행한다.

@@ -1,0 +1,192 @@
+test_compose_has_api_inference_gpu_and_loopback_contracts (test_deploy_contract.DeployContractTests) ... ok
+test_cuda_line_is_pinned_and_not_replaced (test_deploy_contract.DeployContractTests) ... ok
+test_docker_compose_config_is_valid (test_deploy_contract.DeployContractTests) ... ok
+test_prometheus_metric_names_are_stable (test_deploy_contract.DeployContractTests) ... ok
+test_service_config_pins_model_and_tokenizer_revision (test_deploy_contract.DeployContractTests) ... ok
+test_start_scripts_are_executable (test_deploy_contract.DeployContractTests) ... ok
+test_host_exposes_an_a6000 (test_deploy_gpu_integration.NativeGpuDeploymentTests) ... skipped 'requires an explicitly started GPU deployment'
+test_running_stack_is_ready_and_exports_metrics (test_deploy_gpu_integration.NativeGpuDeploymentTests) ... skipped 'requires an explicitly started GPU deployment'
+test_vllm_lists_the_pinned_model (test_deploy_gpu_integration.NativeGpuDeploymentTests) ... skipped 'requires an explicitly started GPU deployment'
+test_abstention_cases_have_no_expected_answer (test_eval_set.EvalSetTests) ... ok
+test_allowed_documents_are_readable_by_the_asking_role (test_eval_set.EvalSetTests) ... ok
+test_answer_is_never_given_away_by_the_question (test_eval_set.EvalSetTests)
+A question containing its own answer scores a parroted response full marks. ... ok
+test_case_mix_matches_the_protocol (test_eval_set.EvalSetTests) ... ok
+test_expected_citations_point_at_real_sections (test_eval_set.EvalSetTests) ... ok
+test_forbidden_documents_really_are_forbidden (test_eval_set.EvalSetTests) ... ok
+test_ids_are_unique_and_keys_complete (test_eval_set.EvalSetTests) ... ok
+test_injection_cases_guard_against_the_planted_instruction (test_eval_set.EvalSetTests) ... ok
+test_unauthorized_cases_block_the_leaked_fact_too (test_eval_set.EvalSetTests) ... ok
+test_empty_and_garbage (test_gpu_watch.ParseTests) ... ok
+test_float_value (test_gpu_watch.ParseTests) ... ok
+test_plain_value (test_gpu_watch.ParseTests) ... ok
+test_no_samples_does_not_crash (test_gpu_watch.ReportTests) ... ok
+test_peak_not_last_value (test_gpu_watch.ReportTests) ... ok
+test_alert_names_are_unique (test_monitoring_config.AlertRuleTests) ... ok
+test_alerts_reference_only_known_metrics (test_monitoring_config.AlertRuleTests) ... ok
+test_at_least_one_alert_exists (test_monitoring_config.AlertRuleTests) ... ok
+test_every_alert_declares_where_its_threshold_came_from (test_monitoring_config.AlertRuleTests)
+근거 없는 threshold를 조용히 넣지 못하게 한다. ... ok
+test_every_alert_references_a_runbook_that_exists (test_monitoring_config.AlertRuleTests) ... ok
+test_thresholds_match_configs_profiles (test_monitoring_config.AlertRuleTests) ... ok
+test_ungrounded_thresholds_are_explicitly_marked (test_monitoring_config.AlertRuleTests)
+근거가 없으면 PENDING_THRESHOLD_VALIDATION으로 표시되어야 한다. ... ok
+test_dashboard_answers_every_required_operational_question (test_monitoring_config.DashboardTests)
+요구된 8개 질문이 실제로 패널 제목에 있는가. ... ok
+test_dashboard_is_valid_json_with_stable_uid (test_monitoring_config.DashboardTests) ... ok
+test_datasource_uid_matches_provisioning (test_monitoring_config.DashboardTests) ... ok
+test_every_referenced_metric_is_declared_or_observed (test_monitoring_config.DashboardTests) ... ok
+test_retrieval_and_generation_are_comparable_on_one_panel (test_monitoring_config.DashboardTests)
+retrieval이 병목인지 generation이 병목인지는 둘을 같이 봐야 답이 된다. ... ok
+test_slo_threshold_lines_match_configs (test_monitoring_config.DashboardTests)
+SLO 점선이 configs/profiles.json과 다른 값을 그리면 dashboard가 거짓말을 한다. ... ok
+test_fb_total_is_collected (test_monitoring_config.GpuEvidenceTests)
+완료 조건 10의 'GPU memory total'. DCGM 기본 field set에는 없어서 ... ok
+test_vllm_ttft_buckets_lack_the_slo_boundary (test_monitoring_config.GpuEvidenceTests)
+이 프로젝트의 SLO는 2,000ms인데 vLLM 0.9.2 bucket에는 2.0이 없다. ... ok
+test_all_required_jobs_are_scraped (test_monitoring_config.ScrapeConfigTests) ... ok
+test_gateway_target_list_is_file_based (test_monitoring_config.ScrapeConfigTests)
+A파트가 아직 없을 때 존재하지 않는 서비스에 대해 alert가 울리면 안 된다. ... ok
+test_linear_percentile (test_profiles.PercentileTests) ... ok
+test_a6000_budgets_match_utilization (test_profiles.ProfileConfigTests) ... ok
+test_exactly_three_deployment_profiles (test_profiles.ProfileConfigTests) ... ok
+test_fp8_is_blocked_on_ampere (test_profiles.ProfileConfigTests) ... ok
+test_quality_reference_is_not_a_deployment_profile (test_profiles.ProfileConfigTests) ... ok
+test_starting_candidates_require_revision_pinning (test_profiles.ProfileConfigTests) ... ok
+test_abstention_that_still_recites_the_secret_fails (test_rag_eval.AbstainCaseTests)
+Refusing politely while leaking the number is still a leak. ... ok
+test_correct_abstention_on_unanswerable (test_rag_eval.AbstainCaseTests) ... ok
+test_retrieval_leak_is_recorded_on_the_case (test_rag_eval.AbstainCaseTests) ... ok
+test_unauthorized_leak_zeroes_the_case (test_rag_eval.AbstainCaseTests) ... ok
+test_a_normal_answer_is_not_an_abstention (test_rag_eval.AbstentionDetectionTests) ... ok
+test_hedged_double_negative_is_not_an_abstention (test_rag_eval.AbstentionDetectionTests) ... ok
+test_plain_abstentions (test_rag_eval.AbstentionDetectionTests) ... ok
+test_any_acl_violation_fails_the_whole_run (test_rag_eval.AggregateTests) ... ok
+test_by_type_breakdown (test_rag_eval.AggregateTests) ... ok
+test_weights_sum_to_one (test_rag_eval.AggregateTests) ... ok
+test_unsupported_numbers_are_flagged (test_rag_eval.DiagnosticTests) ... ok
+test_following_the_injected_instruction_fails (test_rag_eval.InjectionCaseTests) ... ok
+test_resisting_the_injection_scores_full_marks (test_rag_eval.InjectionCaseTests) ... ok
+test_empty_retrieval_says_so (test_rag_eval.PromptTests) ... ok
+test_messages_expose_the_citation_ids (test_rag_eval.PromptTests) ... ok
+test_system_prompt_treats_documents_as_data (test_rag_eval.PromptTests) ... ok
+test_unknown_prompt_revision_is_rejected (test_rag_eval.PromptTests) ... ok
+test_answer_without_citations_is_only_partly_grounded (test_rag_eval.ScoreCaseTests) ... ok
+test_correct_and_cited_answer_scores_full_marks (test_rag_eval.ScoreCaseTests) ... ok
+test_fabricated_citation_lowers_groundedness (test_rag_eval.ScoreCaseTests) ... ok
+test_number_formatting_variants_are_accepted (test_rag_eval.ScoreCaseTests) ... ok
+test_partial_facts_score_proportionally (test_rag_eval.ScoreCaseTests) ... ok
+test_refusing_an_answerable_question_is_penalised (test_rag_eval.ScoreCaseTests) ... ok
+test_abstain_cases_are_handed_irrelevant_evidence_not_silence (test_rag_eval_integration.RagEvalIntegrationTests) ... ok
+test_frozen_retrieval_reproduces_the_same_evidence (test_rag_eval_integration.RagEvalIntegrationTests) ... ok
+test_full_run_produces_a_scored_report (test_rag_eval_integration.RagEvalIntegrationTests) ... ok
+test_human_review_sample_is_blind (test_rag_eval_integration.RagEvalIntegrationTests) ... ok
+test_chunk_text_excludes_heading_and_section_title (test_rag_index_ranking.RankingPolicyTests) ... ok
+test_expected_citation_recall_at_8_is_complete (test_rag_index_ranking.RankingPolicyTests) ... ok
+test_section_title_is_used_for_ranking (test_rag_index_ranking.RankingPolicyTests) ... ok
+test_drifted_slo_is_detected (test_regression_gate.AlertThresholdConsistencyTests)
+configs의 SLO를 바꾸면 rule 파일과 어긋나 gate가 막는다. ... ok
+test_rules_match_configs (test_regression_gate.AlertThresholdConsistencyTests) ... ok
+test_changed_eval_set_fails (test_regression_gate.ProvenanceDriftTests) ... ok
+test_changed_prompt_revision_fails (test_regression_gate.ProvenanceDriftTests) ... ok
+test_changed_retriever_config_fails (test_regression_gate.ProvenanceDriftTests) ... ok
+test_baseline_quality_passes (test_regression_gate.QualityRegressionTests) ... ok
+test_below_absolute_policy_minimum_fails (test_regression_gate.QualityRegressionTests)
+configs/profiles.json의 quality_score_min(90)을 gate가 실제로 쓴다. ... ok
+test_gate_does_not_redefine_the_project_threshold (test_regression_gate.QualityRegressionTests)
+gate가 configs/profiles.json의 합격선을 자기 값으로 대체하지 않는다. ... ok
+test_regression_below_baseline_fails_even_when_above_90 (test_regression_gate.QualityRegressionTests)
+90점은 넘지만 baseline보다 나빠진 변경도 막는다. ... ok
+test_tolerance_comes_from_a_measurement (test_regression_gate.QualityRegressionTests) ... ok
+test_any_acl_violation_fails (test_regression_gate.SecurityRegressionTests) ... ok
+test_equal_injection_defence_passes (test_regression_gate.SecurityRegressionTests)
+baseline 2건은 미해결 결함이다. gate는 악화만 막는다. ... ok
+test_improved_injection_defence_passes (test_regression_gate.SecurityRegressionTests) ... ok
+test_unauthorized_retrieval_is_checked_without_a_gpu (test_regression_gate.SecurityRegressionTests)
+권한 검사가 CPU 단계에 있다는 것이 '모델이 아니라 데이터 층에서 ... ok
+test_worse_injection_defence_fails (test_regression_gate.SecurityRegressionTests) ... ok
+test_all_skipped_is_a_nonzero_failure (test_regression_gate.StageSeparationTests) ... ok
+test_cpu_and_gpu_stages_are_disjoint (test_regression_gate.StageSeparationTests) ... ok
+test_gpu_stages_are_reported_skipped_not_passed (test_regression_gate.StageSeparationTests)
+GPU 없는 CI가 GPU 단계를 통과했다고 말하지 않는지 실제로 실행해 본다. ... ok
+test_skipped_stages_never_count_as_passed (test_regression_gate.StageSeparationTests) ... ok
+test_flag_is_absent_by_default (test_result_contract.EnforceEagerTests) ... ok
+test_flag_is_emitted_when_requested (test_result_contract.EnforceEagerTests) ... ok
+test_process_table_is_removed (test_result_contract.EnvironmentRedactionTests) ... ok
+test_text_without_a_process_table_is_unchanged (test_result_contract.EnvironmentRedactionTests) ... ok
+test_a6000_run_cannot_be_relabelled_as_native (test_result_contract.EvidenceSeparationTests) ... ok
+test_annotated_placeholder_is_also_rejected (test_result_contract.EvidenceSeparationTests)
+The equality check let "FILL_ME: <instruction>" through, so nine ... ok
+test_filled_emulation_record_passes (test_result_contract.EvidenceSeparationTests) ... ok
+test_native_record_must_match_the_profile_card_size (test_result_contract.EvidenceSeparationTests) ... ok
+test_schema_violation_is_reported (test_result_contract.EvidenceSeparationTests) ... ok
+test_unwritten_decision_reason_is_rejected (test_result_contract.EvidenceSeparationTests)
+Found by the 2026-08-08b sweep: nine records validated OK while every ... ok
+test_client_queue_time_is_reported_separately (test_result_contract.QueueWaitTests) ... ok
+test_deployment_matched_template_uses_matched_utilization (test_result_contract.ResultTemplateTests) ... ok
+test_emulation_template_satisfies_published_schema (test_result_contract.ResultTemplateTests) ... ok
+test_native_template_satisfies_published_schema (test_result_contract.ResultTemplateTests) ... ok
+test_template_inherits_parameter_size_from_candidates (test_result_contract.ResultTemplateTests) ... ok
+test_unlisted_model_requires_explicit_parameter_size (test_result_contract.ResultTemplateTests) ... ok
+test_serve_command_pins_tokenizer_revision (test_result_contract.ServeCommandTests) ... ok
+test_no_new_runtime_dependencies (test_retrieval_contract.DependencyPolicyTests) ... ok
+test_chunk_id_format (test_retrieval_contract.RetrievalContractTests) ... ok
+test_chunks_have_the_contract_keys (test_retrieval_contract.RetrievalContractTests) ... ok
+test_config_hash_is_stable_and_content_sensitive (test_retrieval_contract.RetrievalContractTests) ... ok
+test_config_hash_reacts_to_permission_changes (test_retrieval_contract.RetrievalContractTests)
+Added by review 2026-08-08 (work/review-claude-rag_index.json). ... ok
+test_degenerate_inputs_do_not_raise (test_retrieval_contract.RetrievalContractTests) ... ok
+test_every_corpus_document_is_indexed (test_retrieval_contract.RetrievalContractTests) ... ok
+test_heading_line_is_not_part_of_the_chunk_text (test_retrieval_contract.RetrievalContractTests) ... ok
+test_hit_shape_and_ranking (test_retrieval_contract.RetrievalContractTests) ... ok
+test_index_file_round_trip (test_retrieval_contract.RetrievalContractTests) ... ok
+test_injection_documents_stay_in_the_index (test_retrieval_contract.RetrievalContractTests) ... ok
+test_known_item_retrieval (test_retrieval_contract.RetrievalContractTests) ... ok
+test_search_is_deterministic (test_retrieval_contract.RetrievalContractTests) ... ok
+test_search_never_returns_a_chunk_the_role_cannot_see (test_retrieval_contract.RetrievalContractTests) ... ok
+test_ties_break_on_chunk_id (test_retrieval_contract.RetrievalContractTests) ... ok
+test_unauthorized_eval_cases_never_surface_their_forbidden_documents (test_retrieval_contract.RetrievalContractTests) ... ok
+test_vendor_contractor_only_ever_sees_public_documents (test_retrieval_contract.RetrievalContractTests) ... ok
+test_dry_run_does_not_mutate_current_release (test_rollback_release.RollbackAtomicityTests) ... ok
+test_failed_restart_does_not_mutate_current_release (test_rollback_release.RollbackAtomicityTests) ... ERROR: restart 명령이 1로 실패했다; release state는 유지한다
+ok
+test_verify_requires_ready_and_metrics (test_rollback_release.RollbackAtomicityTests) ... ok
+test_generation_failure_latches_readiness_until_engine_probe_recovers (test_service_endpoints.ServiceEndpointTests) ... ok
+test_health_only_reports_process_liveness (test_service_endpoints.ServiceEndpointTests) ... ok
+test_invalid_json_counts_as_a_request_error (test_service_endpoints.ServiceEndpointTests) ... ok
+test_metrics_exposition_and_successful_rag_request (test_service_endpoints.ServiceEndpointTests) ... ok
+test_model_not_ready_returns_non_success (test_service_endpoints.ServiceEndpointTests) ... ok
+test_readiness_success_lists_each_required_check (test_service_endpoints.ServiceEndpointTests) ... ok
+test_generation_probe_observes_the_engine_path (test_service_inference.InferenceAdapterTests) ... ok
+test_generation_schema_is_validated (test_service_inference.InferenceAdapterTests) ... ok
+test_http_error_means_reachable_but_not_model_ready (test_service_inference.InferenceAdapterTests) ... ok
+test_invalid_models_json_means_reachable_but_not_ready (test_service_inference.InferenceAdapterTests) ... ok
+test_model_probe_success (test_service_inference.InferenceAdapterTests) ... ok
+test_drain_includes_http_response_delivery (test_service_shutdown.ServiceShutdownTests) ... ok
+test_shutdown_rejects_new_work_and_drains_an_accepted_request (test_service_shutdown.ServiceShutdownTests) ... ok
+test_empty_index_fails_retriever_initialization (test_service_startup.ServiceStartupTests) ... ok
+test_index_corpus_version_mismatch_fails_startup (test_service_startup.ServiceStartupTests) ... ok
+test_invalid_scalar_types_do_not_silently_coerce (test_service_startup.ServiceStartupTests) ... ok
+test_missing_config_fails (test_service_startup.ServiceStartupTests) ... ok
+test_missing_index_fails_during_config_load (test_service_startup.ServiceStartupTests) ... ok
+test_unknown_prompt_revision_fails_startup (test_service_startup.ServiceStartupTests) ... ok
+test_unpinned_model_revision_fails_config_load (test_service_startup.ServiceStartupTests) ... ok
+test_unreachable_inference_fails_startup (test_service_startup.ServiceStartupTests) ... ok
+
+----------------------------------------------------------------------
+Ran 153 tests in 14.312s
+
+OK (skipped=3)
+rollback: current -> target
+reason  : deterministic test
+model   : Qwen/Qwen3-14B-AWQ @ 111111111111
+prompt  : prompt-v0.1   retriever: 11d1f8cfeb42
+
+DRY RUN — release state와 audit log를 변경하지 않는다:
+  true
+rollback: current -> target
+reason  : deterministic test
+model   : Qwen/Qwen3-14B-AWQ @ 111111111111
+prompt  : prompt-v0.1   retriever: 11d1f8cfeb42
+
+실행: false

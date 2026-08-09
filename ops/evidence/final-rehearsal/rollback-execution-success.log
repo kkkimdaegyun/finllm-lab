@@ -1,0 +1,21 @@
+ Container finllm-lab-v02-vllm-1 Running
+ Container finllm-lab-v02-vllm-1 Waiting
+ Container finllm-lab-v02-vllm-1 Healthy
+ Container finllm-lab-v02-finllm-api-1 Starting
+ Container finllm-lab-v02-finllm-api-1 Started
+ Container finllm-lab-v02-vllm-1 Waiting
+ Container finllm-lab-v02-finllm-api-1 Waiting
+ Container finllm-lab-v02-vllm-1 Healthy
+ Container finllm-lab-v02-finllm-api-1 Healthy
+rollback: 2026-08-09-baseline -> 2026-08-09-v02-container-good
+reason  : INC-003 intentional API outage; restore immutable known-good container
+model   : Qwen/Qwen3-14B-AWQ @ 31c69efc2946
+prompt  : prompt-v0.1   retriever: 11d1f8cfeb42
+
+실행: bash scripts/deploy/restart_release.sh 2026-08-09-v02-container-good
+
+current-release.json -> 2026-08-09-v02-container-good
+rollback-log.jsonl 에 기록됨
+
+복구 확인은 프로세스 생존이 아니라 metric으로 한다:
+  python3 scripts/rollback_release.py verify

@@ -1,148 +1,97 @@
 {
   "schema_version": "1.0.0",
-  "reviewed_at_utc": "2026-08-09T08:18:14Z",
+  "reviewed_at_utc": "2026-08-09T23:17:10Z",
   "reviewer": "codex",
-  "reviewed_commit": "47cbc5a01320fb203a537392c7b209834225e05a",
-  "verdict": "FAIL",
-  "verdict_reason": "v0.1 측정·평가와 A/B 개별 구현은 검증 가능한 부분이 있으나, A serving tree와 B operations tree가 하나의 Git release로 통합되지 않았고 observability, regression gate, rollback의 fail-open 결함이 남아 있다. 따라서 Build→Deploy→Observe→Alert→Diagnose→Regression Test→Rollback→Evidence closed loop를 재현 가능한 단일 release로 입증하지 못했다.",
-  "repository_topology": {
-    "canonical_git_tree": {
-      "path": "/home/dgkim/dgkim/FinLLM-0.2",
-      "branch": "main",
-      "head": "47cbc5a01320fb203a537392c7b209834225e05a",
-      "scope_observed": "v0.1 plus B-part monitoring, regression, incident, rollback and CI",
-      "working_tree_before_final_artifacts": "clean"
-    },
-    "a_part_working_copy": {
-      "path": "/home/dgkim/dgkim/FinLLM:0.2",
-      "own_git_repository": false,
-      "git_resolves_to": "/home/dgkim",
-      "scope_observed": "v0.1 plus A-part deploy, service, deploy scripts and service/deploy tests",
-      "integration_status": "NOT_IN_CANONICAL_GIT_TREE"
-    }
+  "verdict": "PASS",
+  "release_source": {
+    "branch": "main",
+    "git_sha": "95dd24deba5669919e12b8535dbaf3128646ae5e",
+    "api_image_digest": "sha256:16986083cba5b7c775ad40cf0cee17dd6680fe5b00b03d3be0a7c14e99270feb",
+    "vllm_image_digest": "sha256:ec36cea2d1d23d28bc5ce56d33ab1bc5f96258a870181b161d1df8269fd99a3d",
+    "release_manifest": "ops/release/history/2026-08-09-v02-container-good.json"
   },
+  "verdict_reason": "단일 canonical tree에서 A/B contract를 통합하고 actual NVIDIA RTX A6000 GPU 1에서 pinned API/vLLM Compose, RAG, Prometheus/Grafana/DCGM, all-stage regression, graceful drain, alert firing, immutable rollback과 readiness/provenance verification을 실행했다. 지정된 v0.2 single-A6000 범위의 closed loop가 재현됐다.",
   "passed_gates": [
     {
       "gate": "Gate 1 — Existing Functionality",
-      "basis": [
-        "A tree: python3 -m unittest discover -s tests -v => 111 tests, exit 0, 3 opt-in native GPU tests skipped",
-        "B tree: python3 -m unittest discover -s tests -v => 119 tests, exit 0",
-        "Both trees: 27 results/*.json accepted by scripts/finllm_profile.py validate-result",
-        "The measured result files retain evidence_type=memory-budget-emulation and A6000 hardware provenance"
-      ],
-      "caveat": "Passing historical tests does not prove the v0.2 integrated release."
+      "evidence": [
+        "153 deterministic tests PASS",
+        "27/27 existing result records schema-valid",
+        "eval-v0.1 SHA and retriever hash 11d1f8cfeb42 unchanged"
+      ]
     },
     {
-      "gate": "Gate 5 — Incident",
-      "basis": [
-        "INC-001 and INC-002 reports, alert snapshots, GPU samples and rollback log exist",
-        "INC-002 evidence records graph-enabled FB_USED=26570 MiB and post-rollback FB_USED=22362 MiB",
-        "rollback-log.jsonl records an executed restart with return code 0 and elapsed_seconds=33.112"
-      ],
-      "caveat": "The incident proves a host-vLLM experiment, not the integrated A container release; INC-002 alert timing prose overstates what activeAt proves."
-    }
-  ],
-  "failed_gates": [
-    {
       "gate": "Gate 2 — Deployment",
-      "reason": "A deployment implementation is outside the canonical Git tree and real vLLM/A6000 Compose startup, readiness and shutdown were not executed.",
-      "status": "PENDING_VALIDATION"
+      "evidence": [
+        "Pinned API and vLLM images built",
+        "Actual A6000 GPU 1 Compose startup healthy",
+        "/health, /ready, /metrics and RAG response verified",
+        "SIGTERM drain completed 20/20 response bodies"
+      ]
     },
     {
       "gate": "Gate 3 — Observability",
-      "reason": "Prometheus gateway target is empty and B PromQL depends on metrics/labels not exposed by A. The A service cannot be observed by the submitted B stack.",
-      "status": "FAILED"
+      "evidence": [
+        "Prometheus targets finllm-api, vLLM, DCGM and Prometheus all up=1",
+        "Six application metrics plus readiness/build provenance scraped",
+        "Grafana 11.3.1 dashboard and datasource provisioned",
+        "10 alert rules pass promtool"
+      ]
     },
     {
       "gate": "Gate 4 — Change Safety",
-      "reason": "GPU evaluation can reuse a stale report after rag_eval failure; all selected stages can be skipped and still return exit code 0; release promotion trusts manifest prose and file existence.",
-      "status": "FAILED"
+      "evidence": [
+        "All-stage gate pass=11 fail=0 skipped=0",
+        "60-case live evaluation quality=98.333, ACL violations=0",
+        "stale output, subprocess failure, skip-only and report integrity paths fail closed",
+        "GPU CI job asserts NVIDIA RTX A6000 rather than generic GPU"
+      ]
+    },
+    {
+      "gate": "Gate 5 — Incident",
+      "evidence": [
+        "INC-003 intentionally stopped the actual API after graceful drain",
+        "FinLLMGatewayDown reached firing state",
+        "incident report matches alert, target, client and rollback records"
+      ]
     },
     {
       "gate": "Gate 6 — Rollback",
-      "reason": "Release state changes even when restart is not executed or fails, image_digest may be null, and verification does not require gateway /ready.",
-      "status": "FAILED"
+      "evidence": [
+        "Known-good target has full Git SHA and immutable local image digest",
+        "SHA mismatch attempt failed without state mutation",
+        "Successful rollback command elapsed 6.332s",
+        "Post-restart /models, /ready and finllm_build_info verification PASS"
+      ]
     },
     {
       "gate": "Gate 7 — Evidence Integrity",
-      "reason": "The canonical release claims stage=all while linking a CPU report, and multiple README/result/incident statements convert A6000 memory-budget evidence into target-card fit language. Native 24GB validation does not exist.",
-      "status": "FAILED"
+      "evidence": [
+        "A6000 actual operations evidence is separated from 24GB-class memory-budget-emulation",
+        "Model/tokenizer/prompt/eval/retriever/image provenance is recorded",
+        "NOT_EXECUTED and PENDING_THRESHOLD_VALIDATION boundaries remain explicit"
+      ]
     }
   ],
+  "failed_gates": [],
   "missing_evidence": [
-    "A and B integrated in one immutable Git commit",
-    "real docker compose up of FinLLM API plus vLLM on one A6000",
-    "integrated /health, /ready and /metrics observations from that deployment",
-    "Prometheus scraping the real A service and evaluating A metric alerts",
-    "graceful SIGTERM with live in-flight traffic on the real stack",
-    "fail-closed GPU regression run against a fresh evaluation output",
-    "rollback by immutable container digest followed by /ready verification",
-    "native-gpu-validation on an actual 24GB target GPU",
-    "CI run evidence for an explicitly identified A6000 runner"
+    "Native validation on an actual 24GB GPU",
+    "Remote GitHub execution of the self-hosted A6000 CI job",
+    "Production-corpus and production-traffic validation",
+    "Long-duration evidence for alert rate windows and for durations"
   ],
-  "blockers": [
-    {
-      "id": "REL-BLK-001",
-      "problem": "A and B are separate, incompatible trees rather than one release.",
-      "evidence": [
-        "/home/dgkim/dgkim/FinLLM-0.2 has monitoring/ and ops/ but no service/ or deploy/",
-        "/home/dgkim/dgkim/FinLLM:0.2 has service/ and deploy/ but no monitoring/ or ops/",
-        "A contract uses finllm-api on Compose default network; B contract requires finllm-gateway on external finllm-net"
-      ]
-    },
-    {
-      "id": "REL-BLK-002",
-      "problem": "The observability contract cannot consume the A service metrics.",
-      "evidence": [
-        "monitoring/prometheus/targets/gateway.json is []",
-        "A exposes six unlabeled metrics; B requires status/route labels plus finllm_ready, finllm_generation_ttft_seconds and finllm_build_info",
-        "B error-rate and TTFT alerts therefore cannot evaluate A traffic"
-      ]
-    },
-    {
-      "id": "REL-BLK-003",
-      "problem": "Regression evaluation fails open on stale output.",
-      "evidence": [
-        "scripts/regression_gate.py:329-376 does not remove the previous gate-eval.json and does not reject a non-zero rag_eval return code when the file exists",
-        "Direct reproduction with an unreachable endpoint and pre-existing report returned overall pass and process exit 0"
-      ]
-    },
-    {
-      "id": "REL-BLK-004",
-      "problem": "A gate with no executed stages is reported as pass.",
-      "evidence": [
-        "scripts/regression_gate.py:587-619 sets overall=pass whenever failed is empty",
-        "Direct reproduction skipping all 11 stages returned pass=0, skipped=11, exit 0",
-        "ops/release/current-release.json says stage=all/pass but points to ops/evidence/gate-baseline-cpu.json"
-      ]
-    },
-    {
-      "id": "REL-BLK-005",
-      "problem": "Rollback mutates declared state even when execution fails or is only a dry run.",
-      "evidence": [
-        "scripts/rollback_release.py:212-256 writes target as active regardless of exec_returncode and when --exec is absent",
-        "Direct isolated reproduction with restart_command=false returned process exit 0 and changed current release"
-      ]
-    }
-  ],
-  "majors": [
-    "Alert rate windows and for durations are explicitly PENDING_THRESHOLD_VALIDATION and can miss the two-second load bursts used by this project.",
-    "DCGM alert queries do not select the service GPU; the observed host has two A6000 GPUs.",
-    "Rollback verify treats missing gateway metrics as A not deployed and never checks /ready.",
-    "Release schema permits null image_digest, a seven-character git_sha and mutable shell restart_command.",
-    "GPU CI identifies runs-on only as [self-hosted, gpu] and does not assert A6000 hardware/provenance.",
-    "INC-002 labels activeAt as firing time despite the rule's for:1m delay.",
-    "Result decision text and README use target-card fit wording even though every 2026-08-08c record is A6000 memory-budget-emulation."
-  ],
+  "blockers": [],
+  "majors": [],
   "minor_remaining_risks": [
-    "The A shutdown timeout default is PENDING_VALIDATION rather than a measured production drain budget.",
-    "Prompt injection succeeds in 2 of 5 injection cases; the gate only prevents further regression.",
-    "The 60-case evaluation and synthetic 16-document corpus do not establish production-traffic generalization."
+    "Prompt injection succeeds in 1 of 5 cases; the gate prevents regression but does not claim full defence.",
+    "Alert rate windows and for durations remain PENDING_THRESHOLD_VALIDATION.",
+    "The rollback verifier records the vLLM digest but does not yet compare the running vLLM container ID automatically.",
+    "Single-host Compose has no high availability or zero-downtime model swap."
   ],
   "verified_measurements": [
     {
-      "scope": "A6000 memory-budget-emulation only",
-      "configuration": "Qwen3-14B-AWQ, revision 31c69efc29464b6bb0aee1398b5a7b50a99340c3, gpu_memory_utilization=0.46, enforce_eager=true, concurrency=10, 30 requests, n=3",
+      "scope": "A6000 memory-budget-emulation, v0.1 comparison",
+      "configuration": "Qwen3-14B-AWQ revision 31c69efc29464b6bb0aee1398b5a7b50a99340c3, gpu_memory_utilization=0.46, eager, concurrency=10, 30 requests, n=3",
       "values": {
         "quality_score": 97.667,
         "mean_server_p95_ttft_ms": 129.995,
@@ -150,62 +99,69 @@
         "mean_output_tokens_per_second": 315.331,
         "observed_peak_vram_gib": 21.961,
         "error_rate": 0.0,
-        "oom_count": 0,
-        "acl_violations": 0,
-        "injection_successes": 2,
-        "max_concurrency_at_max_model_len": 9.53
+        "oom_count": 0
       },
-      "sources": [
-        "results/2026-08-08c-profile-a-qwen3-14b-awq-deploymentmatched-eager-r1.json",
-        "results/2026-08-08c-profile-a-qwen3-14b-awq-deploymentmatched-eager-r2.json",
-        "results/2026-08-08c-profile-a-qwen3-14b-awq-deploymentmatched-eager-r3.json"
-      ]
+      "source_glob": "results/2026-08-08c-profile-a-qwen3-14b-awq-deploymentmatched-eager-r{1,2,3}.json"
     },
     {
-      "scope": "A-part GPU-free deployment validation",
+      "scope": "Actual A6000 v0.2 release gate",
       "values": {
-        "tests_run": 111,
-        "native_gpu_tests_skipped": 3,
-        "compose_config_exit_code": 0,
-        "api_image_id": "sha256:05a55cc54bd8b88461434a775bfcdb938d5d097fc7e12879249fb5986483c8d3",
-        "vllm_image_id": "sha256:ec36cea2d1d23d28bc5ce56d33ab1bc5ce56d33ab1bc5f96258a870181b161d1df8269fd99a3d"
+        "tests_passed": 153,
+        "result_records_validated": 27,
+        "gate_stages_passed": 11,
+        "gate_stages_failed": 0,
+        "gate_stages_skipped": 0,
+        "evaluation_cases": 60,
+        "quality_score": 98.333,
+        "acl_violations": 0,
+        "injection_successes": 1
       },
-      "source": "/home/dgkim/dgkim/FinLLM:0.2/deploy/evidence/2026-08-09-a-part-validation.json"
+      "source": "ops/evidence/final-rehearsal/gate-all.json"
+    },
+    {
+      "scope": "Actual A6000 v0.2 incident and recovery",
+      "values": {
+        "in_flight_requests_completed": 20,
+        "in_flight_requests_failed": 0,
+        "gateway_down_alert_detection_seconds": 43.765,
+        "successful_rollback_command_seconds": 6.332,
+        "startup_gpu1_framebuffer_used_mib": 22362
+      },
+      "source": "ops/incidents/INC-003-api-outage-container-rollback.md"
     }
   ],
   "not_verified": [
-    "No performance, latency or VRAM result in A deployment evidence",
-    "No actual 4090/5090 measurement",
+    "No actual RTX 4090 or RTX 5090 measurement",
     "No native 24GB GPU model-fit result",
-    "No integrated production-style request drain measurement",
-    "No end-to-end release candidate at commit 47cbc5a"
+    "No production customer traffic or customer downtime measurement",
+    "No claim that the A6000 v0.1 throughput is end-to-end v0.2 API throughput"
   ],
   "tests_run": [
     {
-      "cwd": "/home/dgkim/dgkim/FinLLM:0.2",
       "command": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v",
-      "actual": "exit 0; Ran 111 tests; OK (skipped=3)"
+      "actual": "exit 0; Ran 153 tests; OK (3 opt-in GPU deployment tests skipped in this invocation)"
     },
     {
-      "cwd": "/home/dgkim/dgkim/FinLLM-0.2",
-      "command": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v",
-      "actual": "exit 0; Ran 119 tests; OK"
+      "command": "FINLLM_RUN_GPU_INTEGRATION=1 python3 -m unittest tests.test_deploy_gpu_integration -v",
+      "actual": "exit 0; Ran 3 tests on actual NVIDIA RTX A6000; OK"
     },
     {
-      "cwd": "both trees",
-      "command": "for f in results/*.json; do python3 scripts/finllm_profile.py validate-result $f; done",
-      "actual": "27/27 records validated in each tree"
+      "command": "python3 scripts/regression_gate.py --stage all --base-url http://127.0.0.1:8000/v1 --index work/v02/gate-index.json",
+      "actual": "exit 0; pass=11 fail=0 skipped=0"
     },
     {
-      "cwd": "/home/dgkim/dgkim/FinLLM:0.2",
-      "command": "docker compose --file deploy/compose.yaml config --quiet",
-      "actual": "exit 0"
+      "command": "promtool check rules/config",
+      "actual": "10 rules and Prometheus config valid"
+    },
+    {
+      "command": "python3 scripts/rollback_release.py verify",
+      "actual": "exit 0; declared release, model, readiness and build provenance match"
     }
   ],
-  "release_recommendation": "DO_NOT_RELEASE. Preserve both trees and evidence, integrate A into the canonical repository through an explicit reviewed merge, reconcile the interface contract, close regression/rollback fail-open paths, then execute one real A6000 end-to-end release rehearsal.",
+  "release_recommendation": "Release the v0.2 single-A6000 reference project with the stated evidence boundaries. Do not market it as native 24GB validation, production-traffic validation or a highly available platform.",
   "next_actions": [
-    "Create one immutable integration commit containing A and B, with a single service/network/metric contract and Prometheus target.",
-    "Add deterministic reproductions for stale-eval, all-skipped, failed-restart and missing-readiness paths, then make all four fail closed.",
-    "Run docker compose on one A6000 and retain /ready, /metrics, alert, in-flight drain and digest rollback evidence before re-judging the release."
+    "Run native validation on the actual target GPU before making 24GB fit/performance claims.",
+    "Design a measured prompt-injection defence experiment without changing the existing threshold semantics.",
+    "Calibrate alert windows with longer representative traffic before using them as paging policy."
   ]
 }

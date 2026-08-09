@@ -1,4 +1,4 @@
-# FinLLM Lab v0.1
+# FinLLM Lab v0.2
 
 > 금융 RAG 서비스를 GPU 한 장으로 운영한다면, 최소 어느 정도의 하드웨어에서
 > 필요한 품질과 응답 성능을 얻을 수 있는가?
@@ -13,10 +13,12 @@
 
 ## 현재 상태
 
-최종 갱신: 2026-08-08
+최종 갱신: 2026-08-09
 
-현재 저장소는 **평가 파이프라인까지 완성되고 GPU 실측을 남겨둔 상태**다.
-아직 실제 benchmark 숫자와 품질 결과가 없으므로 완성 사례처럼 주장하지 않는다.
+현재 저장소는 v0.1의 평가·추론 stack을 보존하면서, 단일 RTX A6000 기준의
+Deployment → Observability → Alert → Regression → Incident → Rollback loop를
+actual Compose rehearsal로 검증한 v0.2 reference project다. 최종 release 판정은
+[`PASS`](docs/final-review/final-release-review.json)다.
 
 완료된 것:
 
@@ -29,15 +31,29 @@
 - 직접 작성한 60문항 평가셋 ([`datasets/eval-v0.1.jsonl`](datasets/eval-v0.1.jsonl)) —
   권한 우회 10문항과 prompt injection 5문항 포함
 - ACL을 검색 이전에 강제하는 BM25 retriever와 규칙 기반 채점 harness
-- ADR 3건, 자동 테스트 73개
-
-- Profile A 실측 완료 — 아래 비교표 참조
+- ADR과 기존 27개 result record의 schema/provenance
+- Profile A A6000 실측 — 아래 비교표 참조
+- pinned API/vLLM container와 단일 명령 Compose 기동
+- `/health`, `/ready`, `/metrics`, startup validation, graceful drain
+- Prometheus/Grafana/DCGM와 10개 alert rule
+- 153개 deterministic test, 11-stage actual regression gate
+- INC-003 service-down alert와 immutable container rollback
 
 남은 것:
 
-- 24GB 안에 들어가는 설정으로 재측정 (아래 결론 참조)
-- closed-loop 부하 모델 재측정
 - 실제 24GB 카드 실측 (`native-gpu-validation`)
+- production corpus/traffic 및 long-duration alert window 검증
+- remote self-hosted A6000 GitHub CI 실행
+
+한 명령으로 통합 stack을 시작한다.
+
+```bash
+scripts/deploy/up.sh -d
+```
+
+host CUDA와 driver는 변경하지 않는다. preloaded model cache와 GPU 1을 사용하도록
+`deploy/.env`를 먼저 작성해야 한다. 상세는 [`deploy/README.md`](deploy/README.md)에
+있다.
 
 ## Profile A 첫 비교표
 
@@ -45,13 +61,14 @@ RTX A6000 1장, 동시성 10, 요청 30개, 3회 반복. `2026-08-08c` 측정,
 `--enforce-eager`, retriever `11d1f8cfeb42`, eval `eval-v0.1`, prompt `prompt-v0.1`.
 **모든 수치는 A6000 관측값이며 RTX 4090 성능이 아니다.**
 
-| 후보 | 예산 | Quality | P95 TTFT(서버) | P95 TTFT(사용자) | tok/s | Peak VRAM | 24GB 적합 | 최대 동시성 |
+| 후보 | 예산 | Quality | P95 TTFT(서버) | P95 TTFT(사용자) | tok/s | Peak VRAM | A6000 peak <24GiB | 최대 동시성 |
 |---|---|---:|---:|---:|---:|---:|:---:|---:|
-| Qwen3-8B BF16 | 0.50 class-ceiling | 95.9 | 81ms | 1,349ms | 287.0 | 24.01GiB | **초과** | 7.31 |
-| Qwen3-14B-AWQ | 0.50 class-ceiling | 97.7 | 132ms | 1,329ms | 313.2 | 23.84GiB | 적합 | 11.05 |
-| **Qwen3-14B-AWQ** | **0.46 deployment-matched** | **97.7** | **132ms** | **1,287ms** | **315.3** | **21.96GiB** | **적합** | **9.53** |
+| Qwen3-8B BF16 | 0.50 class-ceiling | 95.926 | 77.329ms | 1,344.653ms | 286.955 | 24.006GiB | 초과 | 7.31 |
+| Qwen3-14B-AWQ | 0.50 class-ceiling | 97.667 | 129.828ms | 1,310.587ms | 313.238 | 23.836GiB | 예 | 11.05 |
+| **Qwen3-14B-AWQ** | **0.46 deployment-matched** | **97.667** | **129.995ms** | **1,273.402ms** | **315.331** | **21.961GiB** | **예** | **9.53** |
 
-권고 구성은 마지막 줄이다. 오류율 0%, OOM 0회, 권한 위반 0건.
+권고 후보는 마지막 줄이다. 오류율 0%, OOM 0회, 권한 위반 0건이다. 표의
+`<24GiB`는 A6000 process 관측값일 뿐 actual 24GB GPU 적합성 검증이 아니다.
 
 한 명령으로 재현한다.
 
@@ -70,19 +87,20 @@ ENFORCE_EAGER=1 bash scripts/run_profile_a.sh 2026-08-08c
 **1. `gpu_memory_utilization`은 카드 적합성을 보장하지 않는다.**
 이 값은 executor 예산만 정하고, CUDA graph(2.2–3.5GiB)와 CUDA context는 그
 밖에서 쓴다. graph를 켠 상태에서는 가장 보수적인 설정(executor 22.08GiB)에서도
-총 사용량이 25.67GiB로 24GB 카드를 넘었다. **"예산 안에 들어갔다"는 "카드에
-들어간다"가 아니다.** graph를 끄자 21.96GiB로 내려와 처음으로 적합해졌다.
+총 사용량이 25.67GiB였다. **"예산 안에 들어갔다"는 "native 카드에서
+검증됐다"가 아니다.** graph를 끄자 A6000 관측 peak가 21.96GiB로 내려가
+native 검증 후보가 됐다.
 
 **2. 처리량 열세의 원인을 양자화로 오진했다.**
 14B AWQ의 처리량이 8B의 1/5이었고, 처음에는 "Ampere에서 AWQ 4-bit 역양자화
 비용"으로 설명했다. 그럴듯했고 숫자와도 맞았지만 **틀렸다.** `--enforce-eager`로
 CUDA graph만 끄자 57.2 → 313.2 tok/s가 됐다. 8B는 296.0 → 287.0으로 거의
-변화가 없었으므로 양자화 탓이 아니다. 동시성 1에서도 6.2배 차이가 나 배치
-효과도 아니다. vLLM 0.9.2 + Ampere + AWQ에서 CUDA graph 경로가 병리적으로
-느리다.
+변화가 없었다. 따라서 “AWQ 자체가 항상 느리다”는 설명은 반증됐고, 이
+vLLM 0.9.2 + Ampere + AWQ 조건의 저성능이 graph-enabled path와 함께 나타났다고
+결론을 좁혔다. 정확한 kernel root cause는 `NOT_MEASURED`다.
 
 이 오진을 잡은 것은 추가 실험이었다. 원인을 안다고 생각하고 멈췄다면 8B를
-골랐을 것이고, 그 구성은 24GB 카드에 들어가지도 않았다(24.01GiB).
+골랐을 것이고, 그 구성의 A6000 관측 peak는 24.01GiB였다.
 
 **3. 4-bit 양자화의 이득은 KV cache 여유로 나타난다.**
 graph를 끈 조건에서 14B AWQ는 8B보다 품질이 높고(97.7 vs 95.9), 메모리를 덜

@@ -1,0 +1,193 @@
+[
+    {
+        "Id": "sha256:16986083cba5b7c775ad40cf0cee17dd6680fe5b00b03d3be0a7c14e99270feb",
+        "RepoTags": [
+            "finllm-api:0.2-python3.10.12"
+        ],
+        "RepoDigests": [],
+        "Comment": "buildkit.dockerfile.v0",
+        "Created": "2026-08-09T23:12:16.536935157Z",
+        "Config": {
+            "User": "finllm:finllm",
+            "ExposedPorts": {
+                "8080/tcp": {}
+            },
+            "Env": [
+                "PATH=/opt/finllm-venv/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                "LANG=C.UTF-8",
+                "GPG_KEY=A035C8C19219BA821ECEA86B64E628F8D684696D",
+                "PYTHON_VERSION=3.10.12",
+                "PYTHON_PIP_VERSION=23.0.1",
+                "PYTHON_SETUPTOOLS_VERSION=65.5.1",
+                "PYTHON_GET_PIP_URL=https://github.com/pypa/get-pip/raw/9af82b715db434abb94a0a6f3569f43e72157346/public/get-pip.py",
+                "PYTHON_GET_PIP_SHA256=45a2bb8bf2bb5eff16fdd00faef6f29731831c7c59bd9fc2bf1f3bed511ff1fe",
+                "PYTHONDONTWRITEBYTECODE=1",
+                "PYTHONUNBUFFERED=1",
+                "FINLLM_CONFIG_PATH=/app/deploy/config/service.json",
+                "FINLLM_CORPUS_DIR=/app/corpus/v0.1",
+                "FINLLM_INDEX_PATH=/var/lib/finllm/index-v0.1.json"
+            ],
+            "Entrypoint": [
+                "/app/scripts/deploy/start_service.sh"
+            ],
+            "WorkingDir": "/app",
+            "Labels": {
+                "com.docker.compose.project": "finllm-lab-v02",
+                "com.docker.compose.service": "finllm-api",
+                "com.docker.compose.version": "5.3.0",
+                "org.opencontainers.image.python.version": "3.10.12",
+                "org.opencontainers.image.title": "FinLLM API",
+                "org.opencontainers.image.version": "0.2"
+            },
+            "ArgsEscaped": true
+        },
+        "Architecture": "amd64",
+        "Os": "linux",
+        "Size": 169831899,
+        "GraphDriver": {
+            "Data": {
+                "LowerDir": "/var/lib/docker/overlay2/sxp5c8zy03s18us9i0umy2ppc/diff:/var/lib/docker/overlay2/sk78mnsh7c8lfyfhq594r38xt/diff:/var/lib/docker/overlay2/y8o9xj58j7imwqapun49wtgze/diff:/var/lib/docker/overlay2/kkccolukdcyqd9qtujbu0nw7o/diff:/var/lib/docker/overlay2/b4ll8ivo7nv2vmoyszvccdou5/diff:/var/lib/docker/overlay2/oko4dt03h05cw118rumweme0i/diff:/var/lib/docker/overlay2/854850abc967a6654305f86957e9424c3240f6ef84fda36acf15f07189c01f8b/diff:/var/lib/docker/overlay2/6aba7b11fc6163f9be4cfd7a67dc51c487a4d46363fffdfeaa7111f60ab73d2e/diff:/var/lib/docker/overlay2/8cdaca6e8d6640f6388dd8ff97607f32397198e75f76985d9c2fde1b30477f35/diff:/var/lib/docker/overlay2/a7c7c953079ef79c5d9983dc5d15593db02c2c0302f38bdcae9ffd6705cb7c84/diff:/var/lib/docker/overlay2/1b296025d4d9ba1639e98920a5051a7ef381d682ab9df1aff975f6e17c41bf36/diff",
+                "MergedDir": "/var/lib/docker/overlay2/9xwmjzbnyqt9wfyzkfu1r4oo0/merged",
+                "UpperDir": "/var/lib/docker/overlay2/9xwmjzbnyqt9wfyzkfu1r4oo0/diff",
+                "WorkDir": "/var/lib/docker/overlay2/9xwmjzbnyqt9wfyzkfu1r4oo0/work"
+            },
+            "Name": "overlay2"
+        },
+        "RootFS": {
+            "Type": "layers",
+            "Layers": [
+                "sha256:511780f88f80081112aea1bfdca6c800e1983e401b338e20b2c6e97f384e4299",
+                "sha256:5b60283f3630414f6fe44bc0dabec675c177dfffc4db7431fb6bbf6bb6b87243",
+                "sha256:1b9e3cebd93c3e5a8ff34b8f7232877a28495b5930a0df5c28d4b40d5c3d9eec",
+                "sha256:43574d3b4af97c50175f1b9707323baa0e50a7c63c9120ff9d56b54a5d3d9098",
+                "sha256:54512d0df01f14f7c60b5a82fe92dad97f8d39452d749db518b1915ff8d671b0",
+                "sha256:4906ab691be66013d08d632960ab0045aa8aedcd0105ae9141eef2f24d296563",
+                "sha256:ce3385bfa728d36aec21e2fc7751ef231ca202a7dcf7e0a84e921ee2773ab3f7",
+                "sha256:f44991bf1ed72023b0bcf54661500507cacada8fa7ccdaeb8d2e8b6aab1f3f40",
+                "sha256:16fd0ebbef7f034b17e149813cb1af24339f20c46d48011b1a9b5ae998a85938",
+                "sha256:a73475196a5b0ea99bfe5b2db474745347067303c2872e14284b911f9c07255c",
+                "sha256:91adb6f7de287dcacd8c3d209fcb2f0a41d3f6834872c5c73c7ddc9d0d7c21e0",
+                "sha256:3915c730b268326e77e6b1985c601df451e07c40cf9e95289bf25e26b79ddcda"
+            ]
+        },
+        "Metadata": {
+            "LastTagTime": "2026-08-09T23:12:16.757702453Z"
+        }
+    },
+    {
+        "Id": "sha256:ec36cea2d1d23d28bc5ce56d33ab1bc5f96258a870181b161d1df8269fd99a3d",
+        "RepoTags": [
+            "finllm-vllm:0.2-vllm0.9.2-cuda12.2.2"
+        ],
+        "RepoDigests": [],
+        "Comment": "buildkit.dockerfile.v0",
+        "Created": "2026-08-09T05:18:03.882493519Z",
+        "Config": {
+            "User": "finllm:finllm",
+            "ExposedPorts": {
+                "8000/tcp": {}
+            },
+            "Env": [
+                "PATH=/opt/python/bin:/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                "NVARCH=x86_64",
+                "NVIDIA_REQUIRE_CUDA=cuda>=12.2 brand=tesla,driver>=470,driver<471 brand=unknown,driver>=470,driver<471 brand=nvidia,driver>=470,driver<471 brand=nvidiartx,driver>=470,driver<471 brand=geforce,driver>=470,driver<471 brand=geforcertx,driver>=470,driver<471 brand=quadro,driver>=470,driver<471 brand=quadrortx,driver>=470,driver<471 brand=titan,driver>=470,driver<471 brand=titanrtx,driver>=470,driver<471 brand=tesla,driver>=525,driver<526 brand=unknown,driver>=525,driver<526 brand=nvidia,driver>=525,driver<526 brand=nvidiartx,driver>=525,driver<526 brand=geforce,driver>=525,driver<526 brand=geforcertx,driver>=525,driver<526 brand=quadro,driver>=525,driver<526 brand=quadrortx,driver>=525,driver<526 brand=titan,driver>=525,driver<526 brand=titanrtx,driver>=525,driver<526",
+                "NV_CUDA_CUDART_VERSION=12.2.140-1",
+                "NV_CUDA_COMPAT_PACKAGE=cuda-compat-12-2",
+                "CUDA_VERSION=12.2.2",
+                "LD_LIBRARY_PATH=/opt/python/lib:/usr/local/nvidia/lib:/usr/local/nvidia/lib64",
+                "NVIDIA_VISIBLE_DEVICES=all",
+                "NVIDIA_DRIVER_CAPABILITIES=compute,utility",
+                "NV_CUDA_LIB_VERSION=12.2.2-1",
+                "NV_NVTX_VERSION=12.2.140-1",
+                "NV_LIBNPP_VERSION=12.2.1.4-1",
+                "NV_LIBNPP_PACKAGE=libnpp-12-2=12.2.1.4-1",
+                "NV_LIBCUSPARSE_VERSION=12.1.2.141-1",
+                "NV_LIBCUBLAS_PACKAGE_NAME=libcublas-12-2",
+                "NV_LIBCUBLAS_VERSION=12.2.5.6-1",
+                "NV_LIBCUBLAS_PACKAGE=libcublas-12-2=12.2.5.6-1",
+                "NV_LIBNCCL_PACKAGE_NAME=libnccl2",
+                "NV_LIBNCCL_PACKAGE_VERSION=2.19.3-1",
+                "NCCL_VERSION=2.19.3-1",
+                "NV_LIBNCCL_PACKAGE=libnccl2=2.19.3-1+cuda12.2",
+                "NVIDIA_PRODUCT_NAME=CUDA",
+                "NV_CUDA_CUDART_DEV_VERSION=12.2.140-1",
+                "NV_NVML_DEV_VERSION=12.2.140-1",
+                "NV_LIBCUSPARSE_DEV_VERSION=12.1.2.141-1",
+                "NV_LIBNPP_DEV_VERSION=12.2.1.4-1",
+                "NV_LIBNPP_DEV_PACKAGE=libnpp-dev-12-2=12.2.1.4-1",
+                "NV_LIBCUBLAS_DEV_VERSION=12.2.5.6-1",
+                "NV_LIBCUBLAS_DEV_PACKAGE_NAME=libcublas-dev-12-2",
+                "NV_LIBCUBLAS_DEV_PACKAGE=libcublas-dev-12-2=12.2.5.6-1",
+                "NV_CUDA_NSIGHT_COMPUTE_VERSION=12.2.2-1",
+                "NV_CUDA_NSIGHT_COMPUTE_DEV_PACKAGE=cuda-nsight-compute-12-2=12.2.2-1",
+                "NV_NVPROF_VERSION=12.2.142-1",
+                "NV_NVPROF_DEV_PACKAGE=cuda-nvprof-12-2=12.2.142-1",
+                "NV_LIBNCCL_DEV_PACKAGE_NAME=libnccl-dev",
+                "NV_LIBNCCL_DEV_PACKAGE_VERSION=2.19.3-1",
+                "NV_LIBNCCL_DEV_PACKAGE=libnccl-dev=2.19.3-1+cuda12.2",
+                "LIBRARY_PATH=/usr/local/cuda/lib64/stubs",
+                "DEBIAN_FRONTEND=noninteractive",
+                "PIP_DISABLE_PIP_VERSION_CHECK=1",
+                "PIP_NO_CACHE_DIR=1",
+                "HF_HOME=/var/cache/finllm/huggingface",
+                "VLLM_CACHE_ROOT=/var/cache/finllm/vllm"
+            ],
+            "Entrypoint": [
+                "python3",
+                "-m",
+                "vllm.entrypoints.openai.api_server"
+            ],
+            "Labels": {
+                "com.docker.compose.project": "finllm-lab-v02",
+                "com.docker.compose.service": "vllm",
+                "com.docker.compose.version": "5.3.0",
+                "maintainer": "NVIDIA CORPORATION <cudatools@nvidia.com>",
+                "org.opencontainers.image.cuda.system.version": "12.2.2",
+                "org.opencontainers.image.python.version": "3.10.12",
+                "org.opencontainers.image.ref.name": "ubuntu",
+                "org.opencontainers.image.title": "FinLLM vLLM inference",
+                "org.opencontainers.image.torch.version": "2.7.0+cu126",
+                "org.opencontainers.image.transformers.version": "4.53.2",
+                "org.opencontainers.image.version": "0.2",
+                "org.opencontainers.image.vllm.version": "0.9.2"
+            }
+        },
+        "Architecture": "amd64",
+        "Os": "linux",
+        "Size": 15376306983,
+        "GraphDriver": {
+            "Data": {
+                "LowerDir": "/var/lib/docker/overlay2/adyipya7nni6wm0n4o8tcj2i9/diff:/var/lib/docker/overlay2/smzd298bkf8g9xntqnkfljy55/diff:/var/lib/docker/overlay2/n2kft0fj5xbx807t2z0ntds12/diff:/var/lib/docker/overlay2/zib9ceg5wxuikqueecwk1k92h/diff:/var/lib/docker/overlay2/w6enqirpwy3bp9zer03oy4xok/diff:/var/lib/docker/overlay2/f85ca95c343c5d922ce0b42aca1522802d2d86744de57ecfd76304a8994a23ba/diff:/var/lib/docker/overlay2/378a792381cceb50d93459c13c4f43a8b8a9b96033259156be249e114739d871/diff:/var/lib/docker/overlay2/06dac2e14f42fcf97f74c8183adbb573691241379a2688cef1dd01aac1868f9e/diff:/var/lib/docker/overlay2/4237b10d45102955f47395776d3b86f668dff9173e8d7589e66f1821a230a29f/diff:/var/lib/docker/overlay2/ab1e741d54ecc6724ddf2e10bd0f8073a8d4ecb132c94fbdbfea9c70830106be/diff:/var/lib/docker/overlay2/d7dfe857cc6ce3cf3aca622a95bb4a16f7dcae7a635573799748f33ae04049fe/diff:/var/lib/docker/overlay2/8b20cede0e6e0a4d5da18b8211c82b5d5f0a02d7dc514cfa35951bb2ac764a81/diff:/var/lib/docker/overlay2/f77fa38815422cd1ceb42f760cb32c7c09f2530a0bc11c662bef52d35fd3319e/diff:/var/lib/docker/overlay2/9613612ba5273d5bafffb8acc6e1fc527d99350f32da14a2bfd853700c8ff64f/diff:/var/lib/docker/overlay2/5216c69951c3579b86eb375025cd15e6a31813710afbf46a287e64d5624e9ba7/diff:/var/lib/docker/overlay2/1b175294a798a4322d71001787ee42a8f9395ca94dbdbf78d3b93871b89dd547/diff",
+                "MergedDir": "/var/lib/docker/overlay2/oannvkdjbcn1iyr9eqdzwutjb/merged",
+                "UpperDir": "/var/lib/docker/overlay2/oannvkdjbcn1iyr9eqdzwutjb/diff",
+                "WorkDir": "/var/lib/docker/overlay2/oannvkdjbcn1iyr9eqdzwutjb/work"
+            },
+            "Name": "overlay2"
+        },
+        "RootFS": {
+            "Type": "layers",
+            "Layers": [
+                "sha256:256d88da41857db513b95b50ba9a9b28491b58c954e25477d5dad8abb465430b",
+                "sha256:c735aeb4de509baf67a6c318ae0ef434e36ed80edca7dce29a653e67499fd63a",
+                "sha256:77b174470c9445f8ac446787f14d1c676d294d6323c6fb1b0c21ba328325aeb6",
+                "sha256:adf2c0a553e917db1a0cfdcda1a7d85bfba431fc150c626b45e471c0bc3a5041",
+                "sha256:d3e5eae7a62576ed2689992c2a5e51ca8e8bb8636375268a9821a50c11fa4fcc",
+                "sha256:bd4791c0dfbebfd8bfab1921cbf1edf2d00800dd7d0e82e48008fb31efcf2ade",
+                "sha256:4deb6be006993233d5c03853bb374ad78dcacc6b22dbb66a487e375c7ca9144c",
+                "sha256:97da79745aa177b0efed59ee23f31bfcc07e67c1e4d14205ae244f00180da7da",
+                "sha256:598c4c0e7d71b8bfb29b91c39f8c33bbe2f244de9eeecbc3cbd41a44d0799b70",
+                "sha256:216b978392cfb002d003916d01da6bc104d4382bff715ce08d23b02e7ca24c46",
+                "sha256:679cc72df930dda05a3c39f3377ffe55dbdbac76db48bace256db3b53d380067",
+                "sha256:6bbe5e8b1cd0811309c5e27ba6d808ecd88c10553d2c8932f77b0a34615c4433",
+                "sha256:e3c5f71d1fbfcedcf728e73931ceb6f4bbd6d21f0d0f060543793c04ae9ebb2e",
+                "sha256:7677eb5ceb1898c1395f2a9b86d2a71a26116bbd2f34b340a959a3ca6137a4ca",
+                "sha256:56374714afa9e0e9caad91fa0d22f48095bab4b0206a9f31270fceb2bb9ae203",
+                "sha256:a38bbccf700db109291b671593c43cb5dd3e3f908550b787a8a5f2ac4768ddc0",
+                "sha256:7d1218fa1f418d2618ab8d393ac13143db072fa902909c8ad9ffd8218e3431b8"
+            ]
+        },
+        "Metadata": {
+            "LastTagTime": "2026-08-09T23:09:06.249806865Z"
+        }
+    }
+]
