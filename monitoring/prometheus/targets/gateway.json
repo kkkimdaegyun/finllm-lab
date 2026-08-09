@@ -1,1 +1,6 @@
-[]
+[
+  {
+    "targets": ["finllm-api:8080"],
+    "labels": {"service": "finllm-api", "part": "a-service"}
+  }
+]

@@ -59,7 +59,7 @@ groups:
       - alert: FinLLMHighRequestErrorRate
         # 근거: configs/profiles.json benchmark_policy.error_rate_max = 0.01
         expr: |
-          sum(rate(finllm_requests_total{status=~"5.."}[1m]))
+          sum(rate(finllm_request_errors_total[1m]))
             / sum(rate(finllm_requests_total[1m])) > 0.01
         for: 1m
         labels:
@@ -69,23 +69,6 @@ groups:
           summary: "요청 오류율이 SLO(1%)를 초과"
           threshold_source: "configs/profiles.json benchmark_policy.error_rate_max"
           window_source: "PENDING_THRESHOLD_VALIDATION — 1m rate window는 미검증"
-          runbook: "ops/runbooks/high-latency.md"
-
-      - alert: FinLLMHighP95TTFT
-        # 근거: configs/profiles.json benchmark_policy.p95_ttft_ms_max = 2000ms
-        # gateway histogram은 계약상 le=2 경계를 갖는다(interface-contract-v0.2 1.2절).
-        expr: |
-          histogram_quantile(
-            0.95, sum by (le) (rate(finllm_generation_ttft_seconds_bucket[1m]))
-          ) > 2
-        for: 2m
-        labels:
-          severity: warning
-          part: a-service
-        annotations:
-          summary: "P95 TTFT가 SLO(2,000ms)를 초과"
-          threshold_source: "configs/profiles.json benchmark_policy.p95_ttft_ms_max"
-          for_duration_source: "PENDING_THRESHOLD_VALIDATION"
           runbook: "ops/runbooks/high-latency.md"
 
       - alert: FinLLMVLLMHighP95TTFT

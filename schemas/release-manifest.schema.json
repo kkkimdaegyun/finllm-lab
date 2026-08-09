@@ -29,13 +29,14 @@
     },
     "source": {
       "type": "object",
-      "required": ["git_sha"],
+      "required": ["git_sha", "image_digest"],
       "properties": {
-        "git_sha": { "type": "string", "minLength": 7 },
+        "git_sha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
         "git_branch": { "type": ["string", "null"] },
         "image_digest": {
           "type": ["string", "null"],
-          "description": "A파트 컨테이너 이미지의 digest. 미배포 상태에서는 null"
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "description": "배포할 API container image의 immutable digest. 과거 미통합 기록은 null로 보존할 수 있으나 promote/rollback 대상이 될 수 없다."
         }
       },
       "additionalProperties": true

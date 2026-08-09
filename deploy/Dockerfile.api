@@ -1,0 +1,45 @@
+# syntax=docker/dockerfile:1.7
+FROM python:3.10.12-slim-bookworm@sha256:4d440b214e447deddc0a94de23a3d97d28dfafdf125a8b4bb8073381510c9ee2 AS dependencies
+
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_NO_CACHE_DIR=1
+
+RUN python -m venv /opt/finllm-venv
+COPY deploy/requirements-build.lock /tmp/requirements-build.lock
+COPY deploy/requirements-api.lock /tmp/requirements-api.lock
+RUN /opt/finllm-venv/bin/python -m pip install \
+      --requirement /tmp/requirements-build.lock \
+    && /opt/finllm-venv/bin/python -m pip install \
+      --requirement /tmp/requirements-api.lock
+
+FROM python:3.10.12-slim-bookworm@sha256:4d440b214e447deddc0a94de23a3d97d28dfafdf125a8b4bb8073381510c9ee2
+
+ARG FINLLM_UID=10001
+ARG FINLLM_GID=10001
+
+LABEL org.opencontainers.image.title="FinLLM API" \
+      org.opencontainers.image.version="0.2" \
+      org.opencontainers.image.python.version="3.10.12"
+
+ENV PATH="/opt/finllm-venv/bin:${PATH}" \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    FINLLM_CONFIG_PATH=/app/deploy/config/service.json \
+    FINLLM_CORPUS_DIR=/app/corpus/v0.1 \
+    FINLLM_INDEX_PATH=/var/lib/finllm/index-v0.1.json
+
+RUN groupadd --gid "${FINLLM_GID}" finllm \
+    && useradd --uid "${FINLLM_UID}" --gid "${FINLLM_GID}" \
+      --no-create-home --home-dir /nonexistent --shell /usr/sbin/nologin finllm \
+    && install -d -o finllm -g finllm /var/lib/finllm
+
+COPY --from=dependencies /opt/finllm-venv /opt/finllm-venv
+WORKDIR /app
+COPY --chown=finllm:finllm service service
+COPY --chown=finllm:finllm scripts scripts
+COPY --chown=finllm:finllm corpus corpus
+COPY --chown=finllm:finllm deploy/config deploy/config
+
+USER finllm:finllm
+EXPOSE 8080
+ENTRYPOINT ["/app/scripts/deploy/start_service.sh"]

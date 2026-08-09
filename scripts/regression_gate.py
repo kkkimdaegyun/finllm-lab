@@ -30,6 +30,7 @@ import re
 import subprocess
 import sys
 import time
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
@@ -57,7 +58,6 @@ def _expected_alert_thresholds(config: dict[str, Any]) -> dict[str, float]:
     profile_a = config["deployment_profiles"]["profile-a"]
     return {
         "FinLLMHighRequestErrorRate": policy["error_rate_max"],
-        "FinLLMHighP95TTFT": policy["p95_ttft_ms_max"] / 1000.0,
         "FinLLMVLLMHighP95TTFT": policy["p95_ttft_ms_max"] / 1000.0,
         "FinLLMGPUMemoryAboveProfileClass": profile_a["vram_class_gib"] * 1024,
     }
@@ -328,7 +328,7 @@ def stage_alert_threshold_consistency(ctx: dict[str, Any]) -> Result:
 
 def stage_smoke_evaluation(ctx: dict[str, Any]) -> Result:
     """실제 endpoint에 평가셋을 돌린다. 이후 GPU 단계가 이 결과를 쓴다."""
-    output = ctx["work_dir"] / "gate-eval.json"
+    output = ctx["work_dir"] / f"gate-eval-{uuid.uuid4().hex}.json"
     command = [
         sys.executable,
         str(ROOT / "scripts" / "rag_eval.py"),
@@ -350,6 +350,17 @@ def stage_smoke_evaluation(ctx: dict[str, Any]) -> Result:
     completed = subprocess.run(command, cwd=ROOT, capture_output=True, text=True, check=False)
     elapsed = round(time.perf_counter() - started, 2)
 
+    if completed.returncode != 0:
+        return Result(
+            "smoke-evaluation",
+            FAIL,
+            f"rag_eval이 non-zero({completed.returncode})로 실패했다",
+            {
+                "returncode": completed.returncode,
+                "output_created": output.exists(),
+                "stderr": completed.stderr[-800:],
+            },
+        )
     if not output.exists():
         return Result(
             "smoke-evaluation",
@@ -583,6 +594,25 @@ def main() -> int:
             )
         )
         print(f"[SKIP] {name:32} 실행하지 않음 — 통과로 세지 않는다")
+
+    executed = [r for r in results if r.status != SKIPPED]
+    if not executed:
+        results.append(
+            Result(
+                "gate-execution",
+                FAIL,
+                "실행된 stage가 0개다 — skip-only gate는 release evidence가 아니다",
+            )
+        )
+    elif args.stage == "all" and skipped:
+        results.append(
+            Result(
+                "gate-execution",
+                FAIL,
+                "--stage all은 CPU/GPU 전 stage를 실행해야 한다",
+                {"skipped": sorted(set(skipped))},
+            )
+        )
 
     failed = [r for r in results if r.status == FAIL]
     passed = [r for r in results if r.status == PASS]

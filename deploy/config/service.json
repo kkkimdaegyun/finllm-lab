@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0.0",
+  "service": {
+    "host": "0.0.0.0",
+    "port": 8080,
+    "max_request_bytes": 65536,
+    "listen_backlog": 128
+  },
+  "rag": {
+    "corpus_dir": "corpus/v0.1",
+    "index_path": "work/index-v0.1.json",
+    "retrieval_top_k": 8,
+    "prompt_revision": "prompt-v0.1",
+    "retriever_config_hash": "11d1f8cfeb42"
+  },
+  "inference": {
+    "base_url": "http://127.0.0.1:8000/v1",
+    "model_id": "Qwen/Qwen3-14B-AWQ",
+    "model_revision": "31c69efc29464b6bb0aee1398b5a7b50a99340c3",
+    "tokenizer_revision": "31c69efc29464b6bb0aee1398b5a7b50a99340c3",
+    "timeout_seconds": 180,
+    "api_key_file": null
+  },
+  "lifecycle": {
+    "startup_timeout_seconds": 900,
+    "readiness_interval_seconds": 5,
+    "shutdown_timeout_seconds": 30
+  },
+  "generation": {
+    "temperature": 0.7,
+    "top_p": 0.8,
+    "top_k": 20,
+    "min_p": 0.0,
+    "seed": 42,
+    "max_tokens": 512,
+    "thinking_mode": false
+  }
+}

@@ -66,6 +66,8 @@ services:
     # 보고하는 동안 Prometheus에는 0이 저장되는 것을 확인했다.
     # 2000ms는 scrape_interval 5s보다 짧아 매 scrape가 새 샘플을 본다.
     command: ["-f", "/etc/dcgm-exporter/finllm-counters.csv", "-c", "2000"]
+    environment:
+      NVIDIA_VISIBLE_DEVICES: "${FINLLM_GPU_DEVICE_ID:-1}"
     cap_add: [SYS_ADMIN]
     volumes:
       - ./dcgm/finllm-counters.csv:/etc/dcgm-exporter/finllm-counters.csv:ro
@@ -77,7 +79,7 @@ services:
         reservations:
           devices:
             - driver: nvidia
-              count: all
+              device_ids: ["${FINLLM_GPU_DEVICE_ID:-1}"]
               capabilities: [gpu]
 
 volumes:

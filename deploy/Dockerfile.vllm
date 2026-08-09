@@ -1,0 +1,71 @@
+# syntax=docker/dockerfile:1.7
+# The CUDA base is deliberately the repository's existing 12.2 line. Building
+# this image does not install or change the host CUDA toolkit or NVIDIA driver.
+ARG CUDA_IMAGE=nvidia/cuda:12.2.2-devel-ubuntu22.04@sha256:ae8a022c02aec945c4f8c52f65deaf535de7abb58e840350d19391ec683f4980
+FROM ${CUDA_IMAGE} AS python-builder
+
+ARG PYTHON_VERSION=3.10.12
+ARG PYTHON_SHA256=a43cd383f3999a6f4a7db2062b2fc9594fefa73e175b3aedafa295a51a7bb65c
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends \
+      build-essential ca-certificates curl libbz2-dev libffi-dev libgdbm-dev \
+      liblzma-dev libncursesw5-dev libreadline-dev libsqlite3-dev libssl-dev \
+      tk-dev uuid-dev xz-utils zlib1g-dev \
+    && apt-get clean
+WORKDIR /tmp/python-build
+RUN curl --fail --location --silent --show-error \
+      "https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz" \
+      --output Python.tgz \
+    && echo "${PYTHON_SHA256}  Python.tgz" | sha256sum --check --strict \
+    && tar --extract --gzip --file Python.tgz --strip-components=1 \
+    && ./configure --prefix=/opt/python --enable-shared --with-ensurepip=install \
+    && make --jobs="$(nproc)" \
+    && make install \
+    && if [ ! -e /opt/python/bin/python3 ]; then \
+         ln -s /opt/python/bin/python3.10 /opt/python/bin/python3; \
+       fi
+
+FROM ${CUDA_IMAGE}
+
+ARG FINLLM_UID=10001
+ARG FINLLM_GID=10001
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends \
+      ca-certificates libbz2-1.0 libffi8 libgdbm6 liblzma5 libncursesw6 \
+      libreadline8 libsqlite3-0 libssl3 uuid-runtime zlib1g \
+    && apt-get clean
+
+COPY --from=python-builder /opt/python /opt/python
+ENV PATH="/opt/python/bin:${PATH}" \
+    LD_LIBRARY_PATH="/opt/python/lib:${LD_LIBRARY_PATH}" \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_NO_CACHE_DIR=1 \
+    HF_HOME=/var/cache/finllm/huggingface \
+    VLLM_CACHE_ROOT=/var/cache/finllm/vllm
+
+COPY deploy/requirements-build.lock /tmp/requirements-build.lock
+COPY deploy/requirements-vllm.lock /tmp/requirements-vllm.lock
+RUN python3 -m pip install --requirement /tmp/requirements-build.lock \
+    && python3 -m pip install --requirement /tmp/requirements-vllm.lock \
+    && python3 -c "import sys, torch, transformers, vllm; assert sys.version.split()[0] == '3.10.12'; assert vllm.__version__ == '0.9.2'; assert torch.__version__.startswith('2.7.0'); assert transformers.__version__ == '4.53.2'"
+
+RUN groupadd --gid "${FINLLM_GID}" finllm \
+    && useradd --uid "${FINLLM_UID}" --gid "${FINLLM_GID}" \
+      --create-home --home-dir /home/finllm --shell /usr/sbin/nologin finllm \
+    && install -d -o finllm -g finllm /var/cache/finllm
+
+LABEL org.opencontainers.image.title="FinLLM vLLM inference" \
+      org.opencontainers.image.version="0.2" \
+      org.opencontainers.image.cuda.system.version="12.2.2" \
+      org.opencontainers.image.python.version="3.10.12" \
+      org.opencontainers.image.vllm.version="0.9.2" \
+      org.opencontainers.image.torch.version="2.7.0+cu126" \
+      org.opencontainers.image.transformers.version="4.53.2"
+
+USER finllm:finllm
+EXPOSE 8000
+ENTRYPOINT ["python3", "-m", "vllm.entrypoints.openai.api_server"]

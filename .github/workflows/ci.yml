@@ -181,6 +181,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Runner GPU가 A6000인지 확인
+        run: |
+          gpu_name="$(nvidia-smi --query-gpu=name --format=csv,noheader -i "${FINLLM_GPU_DEVICE_ID:-0}")"
+          if [ "$gpu_name" != "NVIDIA RTX A6000" ]; then
+            echo "::error::expected NVIDIA RTX A6000, got: $gpu_name"
+            exit 1
+          fi
+          echo "verified runner GPU: $gpu_name"
+        env:
+          FINLLM_GPU_DEVICE_ID: ${{ vars.FINLLM_GPU_DEVICE_ID }}
+
       - name: 서비스가 응답하는지 먼저 확인
         run: |
           curl -sf -m 5 "${FINLLM_BASE_URL:-http://127.0.0.1:8000/v1}/models" > /dev/null

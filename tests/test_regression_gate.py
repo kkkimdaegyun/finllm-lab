@@ -179,7 +179,7 @@ class AlertThresholdConsistencyTests(unittest.TestCase):
         result = regression_gate.stage_alert_threshold_consistency(ctx)
         self.assertEqual(result.status, regression_gate.FAIL)
         self.assertTrue(
-            any("FinLLMHighP95TTFT" in m for m in result.evidence["mismatches"]),
+            any("FinLLMVLLMHighP95TTFT" in m for m in result.evidence["mismatches"]),
             result.evidence,
         )
 
@@ -237,6 +237,25 @@ class StageSeparationTests(unittest.TestCase):
         )
         self.assertIn("통과로 세지 않는다", completed.stdout)
         self.assertNotRegex(completed.stdout, r"\[OK  \]\s+unit-tests")
+
+    def test_all_skipped_is_a_nonzero_failure(self) -> None:
+        command = [
+            sys.executable,
+            str(ROOT / "scripts" / "regression_gate.py"),
+            "--stage",
+            "all",
+        ]
+        for name, _function in regression_gate.CPU_STAGES + regression_gate.GPU_STAGES:
+            command.extend(["--skip", name])
+        completed = subprocess.run(
+            command,
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertEqual(completed.returncode, 1, completed.stdout + completed.stderr)
+        self.assertIn("실행된 stage가 0개", completed.stdout)
 
 
 if __name__ == "__main__":

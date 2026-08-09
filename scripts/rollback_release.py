@@ -130,6 +130,9 @@ def command_current(args: argparse.Namespace) -> int:
 
 def _validate_promotable(manifest: dict[str, Any], allow_failed_gate: bool) -> list[str]:
     problems = schema_errors(manifest)
+    image_digest = manifest.get("source", {}).get("image_digest")
+    if not isinstance(image_digest, str) or not image_digest.startswith("sha256:"):
+        problems.append("immutable container image_digest가 없는 release는 승격/rollback할 수 없다")
     gate = manifest.get("regression_gate", {})
     if gate.get("status") != "pass" and not allow_failed_gate:
         problems.append(
@@ -137,8 +140,46 @@ def _validate_promotable(manifest: dict[str, Any], allow_failed_gate: bool) -> l
             "gate를 통과시키거나, 장애 대응 중이라면 --allow-failed-gate와 이유를 남겨라."
         )
     report = gate.get("report")
-    if report and not (ROOT / report).exists():
+    report_path = ROOT / report if report else None
+    if not report:
+        problems.append("gate 리포트 경로가 없다")
+    elif not report_path.exists():
         problems.append(f"gate 리포트 파일이 없다: {report}")
+    else:
+        try:
+            report_payload = read_json(report_path)
+        except (OSError, json.JSONDecodeError) as exc:
+            problems.append(f"gate 리포트를 읽을 수 없다: {exc}")
+        else:
+            counts = report_payload.get("counts", {})
+            if report_payload.get("overall") != "pass":
+                problems.append("gate 리포트 내부 overall이 pass가 아니다")
+            if counts.get("pass", 0) <= 0:
+                problems.append("gate 리포트에서 실행·통과한 stage가 0개다")
+            if counts.get("fail", 0) != 0:
+                problems.append("gate 리포트에 실패 stage가 있다")
+            if report_payload.get("stage") != gate.get("stage"):
+                problems.append(
+                    "manifest와 gate report의 stage가 다르다: "
+                    f"{gate.get('stage')} != {report_payload.get('stage')}"
+                )
+            if gate.get("stage") == "all" and counts.get("skipped", 0) != 0:
+                problems.append("stage=all gate report에 skipped stage가 있다")
+            provenance = report_payload.get("provenance", {})
+            expected = {
+                "model": manifest.get("model", {}).get("id"),
+                "eval_set_version": manifest.get("rag", {}).get("eval_set_version"),
+                "prompt_revision": manifest.get("rag", {}).get("prompt_revision"),
+                "retriever_config_hash": manifest.get("rag", {}).get(
+                    "retriever_config_hash"
+                ),
+            }
+            for field, value in expected.items():
+                if provenance.get(field) != value:
+                    problems.append(
+                        f"gate report provenance {field} 불일치: "
+                        f"{provenance.get(field)!r} != {value!r}"
+                    )
     return problems
 
 
@@ -211,19 +252,71 @@ def command_rollback(args: argparse.Namespace) -> int:
 
     executed = False
     exec_returncode = None
-    if restart_command:
-        if args.exec:
-            print(f"\n실행: {restart_command}")
-            completed = subprocess.run(restart_command, shell=True, cwd=ROOT, check=False)
-            exec_returncode = completed.returncode
-            executed = True
-            if exec_returncode != 0:
-                print(f"WARNING: restart 명령이 {exec_returncode}로 끝났다", file=sys.stderr)
-        else:
-            print("\n다음 명령으로 서비스를 이 release로 되돌린다 (--exec 를 주면 여기서 실행한다):")
-            print(f"  {restart_command}")
-    else:
-        print("\nWARNING: runtime.restart_command가 없다. 수동으로 재기동해야 한다.", file=sys.stderr)
+    if not restart_command:
+        print("ERROR: runtime.restart_command가 없다", file=sys.stderr)
+        return 1
+    if not args.exec:
+        print("\nDRY RUN — release state와 audit log를 변경하지 않는다:")
+        print(f"  {restart_command}")
+        return 0
+
+    print(f"\n실행: {restart_command}")
+    completed = subprocess.run(restart_command, shell=True, cwd=ROOT, check=False)
+    exec_returncode = completed.returncode
+    executed = True
+    if exec_returncode != 0:
+        append_log(
+            {
+                "at_utc": now(),
+                "action": "rollback-failed",
+                "release_id": target["release_id"],
+                "from_release_id": previous["release_id"] if previous else None,
+                "reason": args.reason,
+                "restart_command": restart_command,
+                "executed": True,
+                "exec_returncode": exec_returncode,
+                "state_mutated": False,
+                "incident": args.incident,
+            }
+        )
+        print(
+            f"ERROR: restart 명령이 {exec_returncode}로 실패했다; release state는 유지한다",
+            file=sys.stderr,
+        )
+        return 1
+
+    deadline = time.monotonic() + args.verify_timeout
+    failures: list[str] = []
+    while True:
+        failures = _verify_manifest(
+            target,
+            base_url=args.base_url,
+            ready_url=args.ready_url,
+            metrics_url=args.metrics_url,
+            timeout=args.request_timeout,
+        )
+        if not failures or time.monotonic() >= deadline:
+            break
+        time.sleep(min(2.0, max(0.0, deadline - time.monotonic())))
+    if failures:
+        append_log(
+            {
+                "at_utc": now(),
+                "action": "rollback-verification-failed",
+                "release_id": target["release_id"],
+                "from_release_id": previous["release_id"] if previous else None,
+                "reason": args.reason,
+                "executed": True,
+                "exec_returncode": 0,
+                "verification_failures": failures,
+                "state_mutated": False,
+                "incident": args.incident,
+            }
+        )
+        print("ERROR: rollback 후 readiness/provenance 검증 실패", file=sys.stderr)
+        for failure in failures:
+            print(f"  - {failure}", file=sys.stderr)
+        return 1
 
     if previous:
         previous_path = HISTORY_DIR / f"{previous['release_id']}.json"
@@ -245,6 +338,8 @@ def command_rollback(args: argparse.Namespace) -> int:
         "restart_command": restart_command,
         "executed": executed,
         "exec_returncode": exec_returncode,
+        "verification": "pass",
+        "state_mutated": True,
         "elapsed_seconds": round(time.time() - started, 3),
         "incident": args.incident,
     }
@@ -266,6 +361,61 @@ def _http_get(url: str, timeout: float) -> tuple[int, str]:
         return 0, f"{type(error).__name__}: {error}"
 
 
+def _verify_manifest(
+    manifest: dict[str, Any],
+    *,
+    base_url: str,
+    ready_url: str,
+    metrics_url: str,
+    timeout: float,
+) -> list[str]:
+    failures: list[str] = []
+    status, body = _http_get(f"{base_url.rstrip('/')}/models", timeout)
+    if status != 200:
+        failures.append(f"{base_url}/models 접근 실패 ({status} {body[:120]})")
+    else:
+        try:
+            served = [entry["id"] for entry in json.loads(body).get("data", [])]
+        except (json.JSONDecodeError, KeyError, TypeError):
+            served = []
+        if manifest["model"]["id"] not in served:
+            failures.append(
+                f"선언 모델 {manifest['model']['id']} 이 service model list에 없다: {served}"
+            )
+
+    status, body = _http_get(ready_url, timeout)
+    if status != 200:
+        failures.append(f"{ready_url} ready 확인 실패 ({status} {body[:120]})")
+    else:
+        try:
+            ready_payload = json.loads(body)
+        except json.JSONDecodeError:
+            ready_payload = {}
+        if ready_payload.get("status") != "ready":
+            failures.append(f"{ready_url} payload status가 ready가 아니다")
+
+    status, body = _http_get(metrics_url, timeout)
+    if status != 200:
+        failures.append(f"{metrics_url} provenance 확인 실패 ({status})")
+    else:
+        expected_labels = {
+            "git_sha": manifest["source"]["git_sha"],
+            "image_digest": manifest["source"]["image_digest"],
+            "model_id": manifest["model"]["id"],
+            "model_revision": manifest["model"]["revision"],
+            "tokenizer_revision": manifest["model"]["tokenizer_revision"],
+            "prompt_revision": manifest["rag"]["prompt_revision"],
+            "eval_set_version": manifest["rag"]["eval_set_version"],
+            "retriever_config_hash": manifest["rag"]["retriever_config_hash"],
+        }
+        for field, value in expected_labels.items():
+            if f'{field}="{value}"' not in body:
+                failures.append(
+                    f"finllm_build_info {field} 불일치 (기대: {value})"
+                )
+    return failures
+
+
 def command_verify(args: argparse.Namespace) -> int:
     """선언된 release와 실제로 돌고 있는 것이 같은가.
 
@@ -279,35 +429,13 @@ def command_verify(args: argparse.Namespace) -> int:
     print(f"declared release: {manifest['release_id']}")
     print(f"declared model  : {manifest['model']['id']} @ {manifest['model']['revision'][:12]}")
 
-    failures: list[str] = []
-
-    status, body = _http_get(f"{args.base_url.rstrip('/')}/models", args.timeout)
-    if status != 200:
-        failures.append(f"{args.base_url}/models 에 접근할 수 없다 ({status} {body[:120]})")
-    else:
-        try:
-            served = [entry["id"] for entry in json.loads(body).get("data", [])]
-        except json.JSONDecodeError:
-            served = []
-        print(f"served models   : {served}")
-        if manifest["model"]["id"] not in served:
-            failures.append(
-                f"선언된 모델 {manifest['model']['id']} 이 서비스 중이 아니다. 실제: {served}"
-            )
-
-    # A파트가 배포되어 있으면 build_info의 라벨과 manifest가 일치해야 한다.
-    if args.metrics_url:
-        status, body = _http_get(args.metrics_url, args.timeout)
-        if status != 200:
-            print(f"note: {args.metrics_url} 없음 — A파트 미배포로 간주 (검증 생략)")
-        else:
-            for field, value in (
-                ("model_revision", manifest["model"]["revision"]),
-                ("prompt_revision", manifest["rag"]["prompt_revision"]),
-                ("retriever_config_hash", manifest["rag"]["retriever_config_hash"]),
-            ):
-                if f'{field}="{value}"' not in body:
-                    failures.append(f"finllm_build_info의 {field}가 manifest와 다르다 (기대: {value})")
+    failures = _verify_manifest(
+        manifest,
+        base_url=args.base_url,
+        ready_url=args.ready_url,
+        metrics_url=args.metrics_url,
+        timeout=args.timeout,
+    )
 
     if failures:
         print("\nVERIFY: FAIL")
@@ -340,10 +468,16 @@ def build_parser() -> argparse.ArgumentParser:
     rollback.add_argument("--incident", default=None, help="관련 incident id (예: INC-001)")
     rollback.add_argument("--exec", action="store_true", help="restart_command를 실제로 실행한다")
     rollback.add_argument("--allow-failed-gate", action="store_true")
+    rollback.add_argument("--base-url", default="http://127.0.0.1:8000/v1")
+    rollback.add_argument("--ready-url", default="http://127.0.0.1:8080/ready")
+    rollback.add_argument("--metrics-url", default="http://127.0.0.1:8080/metrics")
+    rollback.add_argument("--request-timeout", type=float, default=5.0)
+    rollback.add_argument("--verify-timeout", type=float, default=120.0)
 
     verify = sub.add_parser("verify", help="선언된 release와 실제 서비스가 일치하는지 확인")
     verify.add_argument("--base-url", default="http://127.0.0.1:8000/v1")
     verify.add_argument("--metrics-url", default="http://127.0.0.1:8080/metrics")
+    verify.add_argument("--ready-url", default="http://127.0.0.1:8080/ready")
     verify.add_argument("--timeout", type=float, default=5.0)
     return parser
 
