@@ -535,13 +535,18 @@ def main() -> int:
     config = load_json(CONFIG_PATH)
     baseline = load_json(args.baseline)
 
-    work_dir = args.index.parent
+    # Normalize once so evidence paths are stable whether the CLI receives a
+    # repository-relative or an absolute index path.  Without this, a
+    # successful live evaluation could be reported as a failed gate while
+    # converting its output path with ``relative_to(ROOT)``.
+    index_path = args.index.resolve()
+    work_dir = index_path.parent
     work_dir.mkdir(parents=True, exist_ok=True)
 
     ctx: dict[str, Any] = {
         "config": config,
         "baseline": baseline,
-        "index_path": args.index,
+        "index_path": index_path,
         "base_url": args.base_url,
         "model": args.model or baseline["model"]["id"],
         "frozen_retrieval": args.frozen_retrieval,
