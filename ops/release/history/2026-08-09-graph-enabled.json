@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0.0",
+  "release_id": "2026-08-09-graph-enabled",
+  "created_at_utc": "2026-08-09T05:15:00+00:00",
+  "status": "rolled-back",
+  "source": {
+    "git_sha": "19f6b6ad5ecf0d2e693717b8825ddcaede3b2da2",
+    "git_branch": "master",
+    "image_digest": null
+  },
+  "model": {
+    "id": "Qwen/Qwen3-14B-AWQ",
+    "revision": "31c69efc29464b6bb0aee1398b5a7b50a99340c3",
+    "tokenizer_revision": "31c69efc29464b6bb0aee1398b5a7b50a99340c3",
+    "quantization": "awq",
+    "max_model_len": 8192,
+    "enforce_eager": false
+  },
+  "rag": {
+    "corpus_version": "corpus-v0.1",
+    "eval_set_version": "eval-v0.1",
+    "prompt_revision": "prompt-v0.1",
+    "retriever_config_hash": "11d1f8cfeb42",
+    "retrieval_top_k": 8
+  },
+  "runtime": {
+    "vllm_version": "0.9.2",
+    "gpu_memory_utilization": 0.46,
+    "memory_budget_mode": "deployment-matched",
+    "max_num_seqs": 10,
+    "gpu_index": 1,
+    "serve_command": "vllm serve Qwen/Qwen3-14B-AWQ --revision 31c69efc29464b6bb0aee1398b5a7b50a99340c3 --tokenizer-revision 31c69efc29464b6bb0aee1398b5a7b50a99340c3 --served-model-name Qwen/Qwen3-14B-AWQ --gpu-memory-utilization 0.46 --max-model-len 8192 --max-num-seqs 10 --tensor-parallel-size 1 --port 8000 --quantization awq",
+    "restart_command": "bash ops/release/restart.sh 2026-08-09-graph-enabled"
+  },
+  "regression_gate": {
+    "status": "pass",
+    "stage": "gpu",
+    "report": "ops/evidence/rollback-demo/02-gate-graph-enabled.json",
+    "quality_score": 97.667,
+    "acl_violations": 0,
+    "injection_successes": 2
+  },
+  "supersedes": "2026-08-09-baseline",
+  "notes": "--enforce-eager를 제거한 구성. ADR-0004에 따르면 CUDA graph가 executor 예산 바깥에서 2.2-3.5GiB를 추가로 쓴다. 품질은 동일할 것으로 예상되므로 regression gate는 통과하지만 24GB class 적합성을 잃는다. rollback 시연용 후보."
+}

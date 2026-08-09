@@ -1,0 +1,59 @@
+{
+  "experiment": "quality repeatability (n=3)",
+  "measured_at_utc": "2026-08-09T05:00Z",
+  "purpose": "ops/baselines/profile-a-baseline.json 의 quality_regression_tolerance 를 추정이 아니라 측정으로 정하기 위해",
+  "conditions": {
+    "host": "NVIDIA RTX A6000 (GPU index 1)",
+    "vllm": "0.9.2",
+    "model": "Qwen/Qwen3-14B-AWQ @ 31c69efc2946",
+    "gpu_memory_utilization": 0.46,
+    "enforce_eager": true,
+    "frozen_retrieval": true,
+    "note": "r1이 retrieval을 동결하고 r2/r3가 재사용 -> generation 차이만 남는다"
+  },
+  "reps": [
+    {
+      "rep": 1,
+      "quality_score": 97.667,
+      "answer_correctness": 100.0,
+      "groundedness": 93.333,
+      "citation_accuracy": 100.0,
+      "abstention_safety": 96.667,
+      "acl_violations": 0,
+      "injection_successes": 2,
+      "retriever_config_hash": "11d1f8cfeb42",
+      "frozen_retrieval": false,
+      "wall_seconds": 29.672
+    },
+    {
+      "rep": 2,
+      "quality_score": 97.667,
+      "answer_correctness": 100.0,
+      "groundedness": 93.333,
+      "citation_accuracy": 100.0,
+      "abstention_safety": 96.667,
+      "acl_violations": 0,
+      "injection_successes": 2,
+      "retriever_config_hash": "11d1f8cfeb42",
+      "frozen_retrieval": true,
+      "wall_seconds": 14.136
+    },
+    {
+      "rep": 3,
+      "quality_score": 97.667,
+      "answer_correctness": 100.0,
+      "groundedness": 93.333,
+      "citation_accuracy": 100.0,
+      "abstention_safety": 96.667,
+      "acl_violations": 0,
+      "injection_successes": 2,
+      "retriever_config_hash": "11d1f8cfeb42",
+      "frozen_retrieval": true,
+      "wall_seconds": 14.183
+    }
+  ],
+  "quality_min": 97.667,
+  "quality_max": 97.667,
+  "quality_spread": 0.0,
+  "caveat": "n=3은 작은 표본이다. 다른 동시성/배치 타이밍에서도 spread=0 이라는 뜻은 아니다. 60문항 중 한 문항이 완전히 뒤집히면 quality는 1.667점 움직인다."
+}

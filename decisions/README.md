@@ -10,8 +10,9 @@
 | `0002-retrieval-design.md` | chunking, 어휘 검색, ACL 적용 시점 | Accepted |
 | `0003-evaluation-scoring.md` | 규칙 기반 채점, LLM judge 배제 | Accepted |
 | `0004-profile-a-model-revised.md` | CUDA graph 오진 정정, 14B AWQ + enforce-eager 선택 | Accepted |
-| `0005-on-prem-packaging.md` | offline model/container 반입 방식 | 미작성 |
-| `0006-observability.md` | metric, SLO, alert 선택 | 미작성 |
+| `0005-on-prem-packaging.md` | offline model/container 반입 방식 | 미작성 (v0.2 A파트) |
+| `0006-observability.md` | metric, SLO, alert 선택 | Accepted (v0.2 B파트) |
+| `0007-change-safety.md` | regression gate, release/rollback 단위 | Accepted (v0.2 B파트) |
 
 `0003`은 원래 계획에 없던 ADR이다. 채점 방식이 합격 조건 90점의 의미를 좌우하는데
 어디에도 기록되어 있지 않아 추가했다.

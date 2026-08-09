@@ -1,0 +1,46 @@
+{
+  "reviewer": "claude",
+  "target": "scripts/run_profile_a.sh, scripts/fill_result.py",
+  "reviewed_at_utc": "2026-08-09T05:20:00Z",
+  "context": "B파트(관측·신뢰성) 구현 중 발견. 두 파일 모두 v0.1 공유 코드이며 B파트 ownership이 아니므로 수정하지 않고 finding으로 제출한다.",
+  "commands_run": [
+    "pkill -9 -f 'vllm serve'",
+    "nvidia-smi --id=1 --query-compute-apps=pid,used_memory --format=csv",
+    "ps -o pid,ppid,cmd -p 2595824",
+    "python3 -c \"import json,glob,collections; print(collections.Counter(json.load(open(f))['hardware']['cuda_version'] for f in glob.glob('results/*.json')))\""
+  ],
+  "findings": [
+    {
+      "severity": "major",
+      "category": "measurement-contamination",
+      "file": "scripts/run_profile_a.sh",
+      "line": 98,
+      "claim": "stop_server()의 pkill 패턴이 vLLM engine worker를 잡지 못해, 다음 구성 측정 시 앞 모델의 VRAM이 남은 채로 진행될 수 있다.",
+      "reproduction": "vLLM을 기동한 뒤 `pkill -9 -f 'vllm serve'` 실행. 이어서 `nvidia-smi --id=1 --query-compute-apps=pid,used_memory --format=csv` 확인. INC-001 실험에서 실제로 재현했다 (ops/incidents/INC-001-vllm-upstream-outage.md 5절).",
+      "observed": "PID 2595824가 PPID=1로 고아가 된 채 23,004 MiB를 계속 점유했다. 이 프로세스의 명령줄은 `python -c from multiprocessing.spawn import spawn_main; spawn_main(tracker_fd=33, pipe_handle=35) --multiprocessing-fork` 이며 'vllm serve' 문자열을 포함하지 않아 pkill -f 대상이 되지 않는다. stop_server()는 120초 대기 후 'WARNING: GPU still busy'만 출력하고 return하며, measure_one() 루프는 다음 구성으로 진행한다.",
+      "expected": "다음 구성을 측정하기 전에 GPU가 실제로 회수되어야 한다. 회수되지 않았다면 peak VRAM 측정이 오염되므로 sweep을 중단하거나 해당 구성을 실패로 기록해야 한다.",
+      "impact": "peak VRAM은 이 프로젝트의 핵심 판정 기준(24GB class 적합성)이다. 오염되면 ADR-0004의 결론 근거가 흔들린다. 다만 2026-08-08c 측정이 실제로 오염됐다는 증거는 없다 — 구성별 peak가 21.96 / 23.84 / 24.01 GiB로 뚜렷이 갈리므로 잔여 메모리가 섞였다면 이렇게 나오기 어렵다. 확정할 수는 없다.",
+      "suggested_fix": "프로세스 이름이 아니라 GPU 점유 사실로 찾는다. `nvidia-smi --id=$GPU_INDEX --query-compute-apps=pid`로 대상 GPU의 PID를 얻어 현재 사용자 소유인 것만 종료하고, 회수 실패 시 sweep을 중단한다. B파트의 ops/release/restart.sh에 같은 방식으로 구현해 두었으니 참고 가능하다.",
+      "also_affects": "docs/runbook-profile-a.md의 수동 절차에도 같은 전제가 깔려 있다."
+    },
+    {
+      "severity": "minor",
+      "category": "provenance",
+      "file": "scripts/fill_result.py",
+      "line": 85,
+      "claim": "hardware.cuda_version이 측정값이 아니라 소스코드에 박힌 상수라, CUDA 버전이 바뀌어도 결과 레코드는 계속 12.2라고 기록한다.",
+      "reproduction": "grep -n 'cuda_version' scripts/fill_result.py — 84행의 driver_version은 environment.json에서 읽는데 85행의 cuda_version은 리터럴 \"12.2\"다.",
+      "observed": "record[\"hardware\"][\"cuda_version\"] = \"12.2\" — 27개 레코드 전부 '12.2'. 현재 호스트의 nvidia-smi도 12.2를 보고하므로 지금은 값 자체가 맞다.",
+      "expected": "environment.json에 이미 근거가 있다. nvidia_smi.stdout에 'CUDA Version: 12.2'가 들어 있으므로 driver_version과 같은 방식으로 파싱해야 한다.",
+      "impact": "지금 당장 틀린 레코드는 없다. 그러나 이 프로젝트는 provenance를 핵심 주장으로 삼고 있고, schemas/run-result.schema.json이 cuda_version을 필수 필드로 요구한다. 필수로 요구하면서 측정하지 않는 필드는 계약의 구멍이다. 특히 이 필드가 바뀌면 모든 baseline이 무효가 되는 종류의 값이다.",
+      "suggested_fix": "re.search(r'CUDA Version: ([0-9.]+)', environment['nvidia_smi']['stdout'])로 읽고, 찾지 못하면 FILL_ME로 두어 validate-result가 막게 한다.",
+      "note": "이 프로젝트에서 CUDA/드라이버 버전은 변경하지 않는 것이 방침이다. 그렇기 때문에 더더욱 '바뀌었는데 눈치채지 못하는' 경로가 없어야 한다."
+    }
+  ],
+  "verdict": "accept-with-changes",
+  "what_i_could_not_verify": [
+    "2026-08-08c 배치의 peak VRAM이 실제로 오염됐는지 여부. 원본 측정 당시의 nvidia-smi compute-apps 기록이 남아 있지 않아 사후 확인이 불가능하다.",
+    "finding 1이 v0.1 sweep에서 몇 번이나 발생했는지. work/serve-*.log에는 종료 시점의 GPU 상태가 기록되지 않는다.",
+    "A파트(Codex)의 Dockerfile/compose/service core. 아직 저장소에 없어 검토하지 못했다."
+  ]
+}

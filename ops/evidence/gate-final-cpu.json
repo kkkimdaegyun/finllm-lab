@@ -1,0 +1,113 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at_utc": "2026-08-09T05:21:44.302922+00:00",
+  "stage": "cpu",
+  "overall": "pass",
+  "counts": {
+    "pass": 7,
+    "fail": 0,
+    "skipped": 4
+  },
+  "baseline_id": "2026-08-08c-profile-a-qwen3-14b-awq-deploymentmatched-eager",
+  "provenance": {
+    "model": "Qwen/Qwen3-14B-AWQ",
+    "base_url": null,
+    "eval_set_version": "eval-v0.1",
+    "prompt_revision": "prompt-v0.1",
+    "retriever_config_hash": "11d1f8cfeb42"
+  },
+  "stages": [
+    {
+      "stage": "unit-tests",
+      "status": "pass",
+      "detail": "Ran 119 tests in 7.881s",
+      "evidence": {
+        "returncode": 0,
+        "seconds": 8.0
+      }
+    },
+    {
+      "stage": "result-schema",
+      "status": "pass",
+      "detail": "27개 레코드 전부 validate-result 통과",
+      "evidence": {
+        "record_count": 27,
+        "seconds": 0.05
+      }
+    },
+    {
+      "stage": "eval-set-integrity",
+      "status": "pass",
+      "detail": "eval-v0.1.jsonl sha256 일치",
+      "evidence": {
+        "sha256": "5be0841002b3c34b1ae6d81ae54358f5898dd799192147a80776b74ebbdc182d",
+        "seconds": 0.0
+      }
+    },
+    {
+      "stage": "retrieval-acl",
+      "status": "pass",
+      "detail": "forbidden_doc_ids를 가진 10개 문항 전부 위반 0건",
+      "evidence": {
+        "cases_checked": 10,
+        "top_k": 8,
+        "seconds": 0.01
+      }
+    },
+    {
+      "stage": "retriever-config-hash",
+      "status": "pass",
+      "detail": "config_hash 11d1f8cfeb42 유지",
+      "evidence": {
+        "config_hash": "11d1f8cfeb42",
+        "seconds": 0.0
+      }
+    },
+    {
+      "stage": "prompt-revision",
+      "status": "pass",
+      "detail": "prompt revision prompt-v0.1 유지",
+      "evidence": {
+        "seconds": 0.06
+      }
+    },
+    {
+      "stage": "alert-threshold-consistency",
+      "status": "pass",
+      "detail": "4개 alert threshold가 configs/profiles.json과 일치",
+      "evidence": {
+        "checked": {
+          "FinLLMHighRequestErrorRate": 0.01,
+          "FinLLMHighP95TTFT": 2.0,
+          "FinLLMVLLMHighP95TTFT": 2.0,
+          "FinLLMGPUMemoryAboveProfileClass": 24576.0
+        },
+        "seconds": 0.0
+      }
+    },
+    {
+      "stage": "smoke-evaluation",
+      "status": "skipped",
+      "detail": "--stage cpu 에서는 실행하지 않음 (통과가 아니다)",
+      "evidence": {}
+    },
+    {
+      "stage": "acl-runtime",
+      "status": "skipped",
+      "detail": "--stage cpu 에서는 실행하지 않음 (통과가 아니다)",
+      "evidence": {}
+    },
+    {
+      "stage": "quality-regression",
+      "status": "skipped",
+      "detail": "--stage cpu 에서는 실행하지 않음 (통과가 아니다)",
+      "evidence": {}
+    },
+    {
+      "stage": "injection-regression",
+      "status": "skipped",
+      "detail": "--stage cpu 에서는 실행하지 않음 (통과가 아니다)",
+      "evidence": {}
+    }
+  ]
+}
