@@ -1,0 +1,63 @@
+{
+  "schema_version": "1.0.0",
+  "reviewed_date": "2026-07-26",
+  "revision_pinned_date": "2026-08-08",
+  "revision_pinned_from": "git ls-remote https://huggingface.co/<model_id> refs/heads/main",
+  "selection_status": "starting-candidates-not-winners",
+  "family": "Qwen3 dense",
+  "family_rationale": [
+    "8B, 14B, and 32B dense sizes support a controlled scale comparison",
+    "Official AWQ variants are available for the 14B and 32B candidates",
+    "Korean is listed among the supported languages",
+    "Apache-2.0 is listed on the official model cards"
+  ],
+  "experiment_defaults": {
+    "thinking_mode": false,
+    "max_model_len": 8192,
+    "max_num_seqs": 10,
+    "revision_policy": "Resolve refs/heads/main at experiment start, then replace null with the immutable commit SHA"
+  },
+  "candidates": [
+    {
+      "id": "qwen3-8b-bf16",
+      "model_id": "Qwen/Qwen3-8B",
+      "revision": "b968826d9c46dd6066d109eabc6255188de91218",
+      "parameter_billions": 8.2,
+      "precision": "BF16",
+      "quantization": "none",
+      "first_profile": "profile-a",
+      "role": "Unquantized baseline"
+    },
+    {
+      "id": "qwen3-14b-awq",
+      "model_id": "Qwen/Qwen3-14B-AWQ",
+      "revision": "31c69efc29464b6bb0aee1398b5a7b50a99340c3",
+      "parameter_billions": 14.8,
+      "precision": "W4A16",
+      "quantization": "AWQ 4-bit",
+      "first_profile": "profile-a",
+      "role": "Best-value candidate"
+    },
+    {
+      "id": "qwen3-32b-awq",
+      "model_id": "Qwen/Qwen3-32B-AWQ",
+      "revision": "0499c3ac83fdef8810b907a23894ba91e95eddd8",
+      "parameter_billions": 32.8,
+      "precision": "W4A16",
+      "quantization": "AWQ 4-bit",
+      "first_profile": "profile-b",
+      "role": "Higher-quality stretch candidate"
+    },
+    {
+      "id": "qwen3-14b-bf16",
+      "model_id": "Qwen/Qwen3-14B",
+      "revision": "40c069824f4251a91eefaf281ebe4c544efd3e18",
+      "parameter_billions": 14.8,
+      "precision": "BF16",
+      "quantization": "none",
+      "first_profile": "reference",
+      "role": "Quantization quality comparison"
+    }
+  ]
+}
+

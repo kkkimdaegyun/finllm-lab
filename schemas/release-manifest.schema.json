@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/finllm-lab/release-manifest.schema.json",
+  "title": "FinLLM Lab Release Manifest",
+  "description": "무엇이 배포되어 있는지, 그것이 어떤 근거로 승격되었는지를 기록한다. rollback의 대상 단위이며 provenance의 단일 기준점이다. schemas/run-result.schema.json은 '측정 결과'의 계약이고, 이것은 '배포된 것'의 계약이다.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "release_id",
+    "created_at_utc",
+    "status",
+    "source",
+    "model",
+    "rag",
+    "runtime",
+    "regression_gate"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "release_id": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}-[a-z0-9-]+$",
+      "description": "예: 2026-08-09-baseline"
+    },
+    "created_at_utc": { "type": "string", "format": "date-time" },
+    "status": {
+      "enum": ["candidate", "active", "superseded", "rolled-back"],
+      "description": "active는 동시에 하나만 존재한다"
+    },
+    "source": {
+      "type": "object",
+      "required": ["git_sha"],
+      "properties": {
+        "git_sha": { "type": "string", "minLength": 7 },
+        "git_branch": { "type": ["string", "null"] },
+        "image_digest": {
+          "type": ["string", "null"],
+          "description": "A파트 컨테이너 이미지의 digest. 미배포 상태에서는 null"
+        }
+      },
+      "additionalProperties": true
+    },
+    "model": {
+      "type": "object",
+      "required": ["id", "revision", "tokenizer_revision", "quantization"],
+      "properties": {
+        "id": { "type": "string" },
+        "revision": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$",
+          "description": "immutable commit SHA만 허용한다. main/latest는 배포 대상이 아니다"
+        },
+        "tokenizer_revision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "quantization": { "type": "string" },
+        "max_model_len": { "type": "integer", "minimum": 1 },
+        "enforce_eager": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "rag": {
+      "type": "object",
+      "required": [
+        "corpus_version",
+        "eval_set_version",
+        "prompt_revision",
+        "retriever_config_hash"
+      ],
+      "properties": {
+        "corpus_version": { "type": "string" },
+        "eval_set_version": { "type": "string" },
+        "prompt_revision": { "type": "string" },
+        "retriever_config_hash": { "type": "string", "minLength": 6 },
+        "retrieval_top_k": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": true
+    },
+    "runtime": {
+      "type": "object",
+      "required": ["vllm_version", "gpu_memory_utilization", "memory_budget_mode"],
+      "properties": {
+        "vllm_version": { "type": "string" },
+        "gpu_memory_utilization": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1
+        },
+        "memory_budget_mode": {
+          "enum": ["class-ceiling", "deployment-matched", "native"]
+        },
+        "max_num_seqs": { "type": "integer", "minimum": 1 },
+        "gpu_index": { "type": ["integer", "null"] },
+        "serve_command": { "type": ["string", "null"] },
+        "restart_command": {
+          "type": ["string", "null"],
+          "description": "rollback이 실행할 명령. A파트 배포 후에는 compose 명령이 된다"
+        }
+      },
+      "additionalProperties": true
+    },
+    "regression_gate": {
+      "type": "object",
+      "required": ["status", "stage", "report"],
+      "description": "gate를 통과하지 않은 release는 promote할 수 없다",
+      "properties": {
+        "status": { "enum": ["pass", "fail", "not-run"] },
+        "stage": { "enum": ["cpu", "gpu", "all"] },
+        "report": { "type": "string", "description": "gate 리포트 JSON 경로" },
+        "quality_score": { "type": ["number", "null"] },
+        "acl_violations": { "type": ["integer", "null"] },
+        "injection_successes": { "type": ["integer", "null"] }
+      },
+      "additionalProperties": true
+    },
+    "supersedes": { "type": ["string", "null"] },
+    "notes": { "type": "string" }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,92 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "49da9f6c-5450-4401-8697-e9873393ba97",
+  "timestamp_utc": "2026-08-08T10:11:03.387214+00:00",
+  "profile_id": "profile-a",
+  "evidence_type": "memory-budget-emulation",
+  "claim_scope": "memory-fit-and-host-observed-performance",
+  "hardware": {
+    "gpu_model": "NVIDIA RTX A6000",
+    "gpu_count": 1,
+    "physical_vram_gib": 48,
+    "power_limit_w": 300.0,
+    "driver_version": "535.288.01",
+    "cuda_version": "12.2"
+  },
+  "software": {
+    "vllm_version": "0.9.2",
+    "torch_version": "2.7.0+cu126",
+    "transformers_version": "4.53.2"
+  },
+  "model": {
+    "id": "Qwen/Qwen3-8B",
+    "revision": "b968826d9c46dd6066d109eabc6255188de91218",
+    "tokenizer_revision": "b968826d9c46dd6066d109eabc6255188de91218",
+    "parameter_billions": 8.2,
+    "quantization": "none",
+    "dtype": "auto",
+    "max_model_len": 8192
+  },
+  "generation": {
+    "thinking_mode": false,
+    "temperature": 0.7,
+    "top_p": 0.8,
+    "top_k": 20,
+    "min_p": 0.0,
+    "seed": 42,
+    "max_tokens": 256
+  },
+  "vllm": {
+    "gpu_memory_utilization": 0.5,
+    "memory_budget_mode": "class-ceiling",
+    "max_num_seqs": 10,
+    "tensor_parallel_size": 1,
+    "command": "vllm serve Qwen/Qwen3-8B --revision b968826d9c46dd6066d109eabc6255188de91218 --tokenizer-revision b968826d9c46dd6066d109eabc6255188de91218 --served-model-name Qwen/Qwen3-8B --gpu-memory-utilization 0.50 --max-model-len 8192 --max-num-seqs 10 --tensor-parallel-size 1 --port 8000",
+    "kv_cache_tokens": 59856,
+    "max_concurrency_at_max_model_len": 7.31,
+    "memory_breakdown_gib": {
+      "model_weights": 15.2683,
+      "kv_cache": 8.22,
+      "cuda_graphs": 2.2
+    }
+  },
+  "rag": {
+    "corpus_version": "corpus-v0.1",
+    "eval_set_version": "eval-v0.1",
+    "retriever_config_hash": "0e40e0354b7b",
+    "prompt_revision": "prompt-v0.1",
+    "retrieval_top_k": 8,
+    "frozen_retrieval": false
+  },
+  "workload": {
+    "concurrency": 10,
+    "request_count": 30,
+    "repetition": 1
+  },
+  "metrics": {
+    "quality_score": 93.905,
+    "answer_correctness": 95.833,
+    "groundedness": 91.429,
+    "citation_accuracy": 94.05,
+    "abstention_safety": 93.333,
+    "p50_ttft_ms": 56.373,
+    "p95_ttft_ms": 90.547,
+    "p95_e2e_ms": 989.609,
+    "aggregate_output_tokens_per_s": 293.751,
+    "peak_vram_gib": 26.139,
+    "error_rate": 0.0,
+    "oom_count": 0,
+    "p95_client_queue_ms": 1308.698,
+    "p95_user_ttft_ms": 1363.445,
+    "p95_user_e2e_ms": 2093.499,
+    "acl_violations": 0,
+    "injection_successes": 3
+  },
+  "decision": {
+    "status": "pending",
+    "reason": "모든 hard gate 통과. 집계 처리량은 가장 높으나 8,192 토큰 기준 최대 동시성이 7.31로 요구치 10에 미달하고, prompt injection 5문항 중 3문항에서 문서 내 지시를 따랐다.",
+    "monthly_cost_estimate": null,
+    "currency": null
+  },
+  "notes": "A6000 1장(GPU index 1)에서 gpu_memory_utilization 0.50으로 24GB class 명목 상한을 흉내낸 실행이다. 지연시간과 처리량은 A6000 관측값이며 RTX 4090 성능이 아니다. 품질은 동일 설정 seed 42로 1회 측정했고, 3회 반복은 부하 지표에만 적용된다."
+}

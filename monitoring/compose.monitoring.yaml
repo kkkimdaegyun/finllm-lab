@@ -1,0 +1,89 @@
+# FinLLM Lab v0.2 — 관측 스택 (B파트 소유)
+#
+# A파트(Codex)의 deploy compose와 분리된 파일이다. 두 스택은 외부 network
+# finllm-net으로만 만난다. 관측 스택을 재시작해도 서비스가 죽지 않는다.
+#
+#   docker network create finllm-net      # 최초 1회
+#   docker compose -f monitoring/compose.monitoring.yaml up -d
+#
+# CUDA/드라이버는 건드리지 않는다. dcgm-exporter는 nvidia container runtime을
+# 통해 호스트 드라이버를 읽기만 한다. 호스트에 아무것도 설치하지 않는다.
+
+name: finllm-monitoring
+
+services:
+  prometheus:
+    image: prom/prometheus:v2.53.3
+    container_name: finllm-prometheus
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=15d
+      - --web.enable-lifecycle
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/rules:/etc/prometheus/rules:ro
+      - ./prometheus/targets:/etc/prometheus/targets:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "127.0.0.1:9090:9090"
+    # 호스트에서 직접 띄운 vLLM을 scrape하기 위한 경로. A파트 compose가 뜨면
+    # targets/vllm.json을 vllm:8000으로 바꾸고 이 줄은 필요 없어진다.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks: [finllm-net]
+
+  grafana:
+    image: grafana/grafana:11.3.1
+    container_name: finllm-grafana
+    restart: unless-stopped
+    depends_on: [prometheus]
+    environment:
+      # 익명 접근을 켜지 않는다. 이 프로젝트는 폐쇄망 금융 RAG를 전제하고,
+      # dashboard에도 문서 ID와 사용률이 드러난다.
+      GF_SECURITY_ADMIN_USER: "${GRAFANA_ADMIN_USER:-admin}"
+      GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA_ADMIN_PASSWORD:-admin}"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "127.0.0.1:3000:3000"
+    networks: [finllm-net]
+
+  dcgm-exporter:
+    image: nvcr.io/nvidia/k8s/dcgm-exporter:3.3.9-3.6.1-ubuntu22.04
+    container_name: finllm-dcgm-exporter
+    restart: unless-stopped
+    # -c 2000: DCGM 기본 collect-interval은 30s다. 이 프로젝트의 부하는 2초
+    # 버스트(2026-08-08c 측정 wall 2.03-2.06s)라 기본값에서는 Prometheus가
+    # 부하 이전의 낡은 샘플을 긁어간다. 실제로 endpoint가 GPU_UTIL=91을
+    # 보고하는 동안 Prometheus에는 0이 저장되는 것을 확인했다.
+    # 2000ms는 scrape_interval 5s보다 짧아 매 scrape가 새 샘플을 본다.
+    command: ["-f", "/etc/dcgm-exporter/finllm-counters.csv", "-c", "2000"]
+    cap_add: [SYS_ADMIN]
+    volumes:
+      - ./dcgm/finllm-counters.csv:/etc/dcgm-exporter/finllm-counters.csv:ro
+    ports:
+      - "127.0.0.1:9400:9400"
+    networks: [finllm-net]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+volumes:
+  prometheus-data:
+  grafana-data:
+
+networks:
+  finllm-net:
+    external: true

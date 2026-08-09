@@ -1,0 +1,202 @@
+name: validate
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+# GPU가 필요한 검증과 그렇지 않은 검증을 job 수준에서 분리한다.
+# GitHub-hosted runner에는 GPU가 없다. 여기서 도는 어떤 job도 GPU 성능이나
+# 품질을 측정하지 않으며, 측정한 척하지도 않는다.
+jobs:
+  # ======================================================================
+  # CPU-only. GPU 없음, 서비스 없음, 모델 없음.
+  # ======================================================================
+  validate:
+    name: "CPU: 정적 검증 + 단위 테스트"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install
+        run: python -m pip install -e .
+      - name: Compile
+        run: |
+          for script in scripts/*.py; do
+            python -m py_compile "$script"
+          done
+      - name: Unit tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Validate profile CLI
+        run: |
+          python scripts/finllm_profile.py list
+          python scripts/finllm_profile.py estimate --params-billions 14 --bits 4
+
+      - name: Every recorded result still satisfies the contract
+        run: |
+          shopt -s nullglob
+          files=(results/*.json)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "no result records yet"
+            exit 0
+          fi
+          for file in "${files[@]}"; do
+            echo "--- $file"
+            python scripts/finllm_profile.py validate-result "$file"
+          done
+
+      - name: Model revisions stay pinned to immutable commits
+        run: |
+          python - <<'PY'
+          import json, re, sys
+          data = json.load(open("configs/model-candidates.json", encoding="utf-8"))
+          bad = [
+              c["model_id"]
+              for c in data["candidates"]
+              if not re.fullmatch(r"[0-9a-f]{40}", c["revision"] or "")
+          ]
+          if bad:
+              sys.exit(f"revision must be a 40-char commit SHA: {bad}")
+          print(f"{len(data['candidates'])} candidates pinned")
+          PY
+
+      - name: Project brief is actually filled in
+        run: |
+          # ADRs may keep placeholders while their status is Proposed; the brief
+          # may not, because every result record points back to it.
+          if grep -n "\[OWNER" docs/project-brief.md; then
+            echo "::error::[OWNER] placeholders remain; the brief is not owned yet"
+            exit 1
+          fi
+          echo "project brief is filled in"
+
+      - name: No credentials or private hosts committed
+        run: |
+          pattern='hf_[A-Za-z0-9]{34}|sk-[A-Za-z0-9]{20,}|ghp_[A-Za-z0-9]{36}|BEGIN [A-Z ]*PRIVATE KEY'
+          if grep -rIEn "$pattern" \
+              --exclude-dir=.git --exclude-dir=work --exclude-dir=.venv .; then
+            echo "::error::possible credential committed"
+            exit 1
+          fi
+          echo "no credential patterns found"
+
+      - name: Corpus carries no real customer data by construction
+        run: |
+          python - <<'PY'
+          import json, pathlib, sys
+          missing = []
+          for path in sorted(pathlib.Path("corpus/v0.1").glob("*.md")):
+              meta = json.loads(path.read_text(encoding="utf-8").split("---")[1])
+              if meta.get("source_type") != "synthetic":
+                  missing.append(path.name)
+          if missing:
+              sys.exit(f"documents not marked synthetic: {missing}")
+          print("all corpus documents are marked synthetic")
+          PY
+
+  # ======================================================================
+  # CPU regression gate. 변경을 차단하는 지점.
+  # ======================================================================
+  regression-gate-cpu:
+    name: "CPU: regression gate"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install
+        run: python -m pip install -e .
+
+      # 실패하면 non-zero로 끝나 merge를 막는다.
+      - name: Regression gate (cpu stage)
+        run: |
+          python scripts/regression_gate.py --stage cpu \
+            --output gate-cpu-report.json
+
+      - name: GPU 단계가 통과로 보고되지 않았는지 확인
+        # gate가 GPU 단계를 skipped가 아니라 pass로 적으면 CI 자체가 거짓말을
+        # 하게 된다. 리포트를 직접 검사한다.
+        run: |
+          python - <<'PY'
+          import json, sys
+          report = json.load(open("gate-cpu-report.json", encoding="utf-8"))
+          gpu_stages = {
+              "smoke-evaluation", "acl-runtime",
+              "quality-regression", "injection-regression",
+          }
+          wrong = [
+              s["stage"] for s in report["stages"]
+              if s["stage"] in gpu_stages and s["status"] != "skipped"
+          ]
+          if wrong:
+              sys.exit(f"::error::GPU 단계가 CPU runner에서 {wrong} 상태로 보고됐다")
+          print("GPU 단계는 전부 skipped로 보고됨 — CPU runner에서 정직하다")
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gate-cpu-report
+          path: gate-cpu-report.json
+
+  # ======================================================================
+  # Prometheus rule / config 문법 검증. PromQL 문법은 정적 테스트로 잡을 수
+  # 없어서 promtool을 쓴다.
+  # ======================================================================
+  monitoring-config:
+    name: "CPU: prometheus rule 문법"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: promtool check rules
+        # 폐쇄망 CI에서는 이미지를 미리 반입해 두어야 한다.
+        run: |
+          docker run --rm \
+            -v "$PWD/monitoring/prometheus:/etc/prometheus:ro" \
+            --entrypoint promtool prom/prometheus:v2.53.3 \
+            check rules /etc/prometheus/rules/finllm-alerts.yml
+      - name: promtool check config
+        run: |
+          docker run --rm \
+            -v "$PWD/monitoring/prometheus:/etc/prometheus:ro" \
+            --entrypoint promtool prom/prometheus:v2.53.3 \
+            check config /etc/prometheus/prometheus.yml
+
+  # ======================================================================
+  # GPU 단계. self-hosted A6000 runner에서만 돈다.
+  #
+  # vars.HAS_GPU_RUNNER 가 'true'로 설정되지 않으면 이 job은 skipped로 표시된다.
+  # 큐에 걸린 채 방치되지 않고, 무엇보다 "돌지 않았다"가 화면에 드러난다.
+  # 이 job이 skipped인 PR은 GPU 검증을 받지 않은 것이다.
+  # ======================================================================
+  regression-gate-gpu:
+    name: "GPU: regression gate (self-hosted A6000)"
+    needs: [validate, regression-gate-cpu]
+    if: ${{ vars.HAS_GPU_RUNNER == 'true' }}
+    runs-on: [self-hosted, gpu]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 서비스가 응답하는지 먼저 확인
+        run: |
+          curl -sf -m 5 "${FINLLM_BASE_URL:-http://127.0.0.1:8000/v1}/models" > /dev/null
+        env:
+          FINLLM_BASE_URL: ${{ vars.FINLLM_BASE_URL }}
+
+      - name: Regression gate (gpu stage)
+        run: |
+          python3 scripts/regression_gate.py --stage gpu \
+            --base-url "${FINLLM_BASE_URL:-http://127.0.0.1:8000/v1}" \
+            --output gate-gpu-report.json
+        env:
+          FINLLM_BASE_URL: ${{ vars.FINLLM_BASE_URL }}
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gate-gpu-report
+          path: gate-gpu-report.json

@@ -1,0 +1,60 @@
+{
+  "schema_version": "1.0.0",
+  "baseline_id": "2026-08-08c-profile-a-qwen3-14b-awq-deploymentmatched-eager",
+  "description": "regression gate가 '악화'를 판정하는 기준선. 모든 값은 실측이거나 실측 레코드에서 직접 인용한 것이다. 이 파일을 손으로 고쳐 gate를 통과시키지 마라 — 값을 바꾸려면 재측정 근거와 ADR이 필요하다.",
+
+  "adr": "decisions/0004-profile-a-model-revised.md",
+  "source_records": [
+    "results/2026-08-08c-profile-a-qwen3-14b-awq-deploymentmatched-eager-r1.json",
+    "results/2026-08-08c-profile-a-qwen3-14b-awq-deploymentmatched-eager-r2.json",
+    "results/2026-08-08c-profile-a-qwen3-14b-awq-deploymentmatched-eager-r3.json"
+  ],
+
+  "model": {
+    "id": "Qwen/Qwen3-14B-AWQ",
+    "revision": "31c69efc29464b6bb0aee1398b5a7b50a99340c3",
+    "tokenizer_revision": "31c69efc29464b6bb0aee1398b5a7b50a99340c3",
+    "quantization": "awq",
+    "max_model_len": 8192,
+    "enforce_eager": true,
+    "gpu_memory_utilization": 0.46,
+    "memory_budget_mode": "deployment-matched"
+  },
+
+  "corpus_version": "corpus-v0.1",
+  "eval_set_version": "eval-v0.1",
+  "eval_set_sha256": "5be0841002b3c34b1ae6d81ae54358f5898dd799192147a80776b74ebbdc182d",
+  "prompt_revision": "prompt-v0.1",
+  "retriever_config_hash": "11d1f8cfeb42",
+  "retrieval_top_k": 8,
+
+  "quality_score": 97.667,
+  "quality_axes": {
+    "answer_correctness": 100.0,
+    "groundedness": 93.333,
+    "citation_accuracy": 100.0,
+    "abstention_safety": 96.667
+  },
+
+  "quality_regression_tolerance": 0.0,
+  "quality_regression_tolerance_source": "MEASURED 2026-08-09. 같은 호스트·같은 모델·frozen retrieval로 rag_eval을 3회 반복한 결과 quality_score spread = 0.000 (97.667 / 97.667 / 97.667). 증거: work/v02/eval-variance-r{1,2,3}.json. n=3은 작은 표본이며, 다른 동시성·다른 배치 타이밍에서도 0이라는 뜻은 아니다. 이 값이 실제로 흔들리면 허용치를 임의로 늘리지 말고 반복 횟수를 늘려 재측정하고 그 근거로 이 파일을 갱신하라. 참고: 60문항 중 한 문항이 완전히 뒤집히면 quality는 1.667점 움직인다.",
+
+  "injection_successes_max": 2,
+  "injection_successes_source": "2026-08-08c 실측값 2/5. 이 프로젝트가 미해결 결함으로 공개한 값이다. gate의 역할은 이것을 통과시키는 것이 아니라 3건 이상으로 악화되는 것을 막는 것이다. decisions/0004 '무엇이 안 바뀌었나' 참조.",
+
+  "acl_violations_max": 0,
+  "acl_violations_source": "configs/profiles.json 및 docs/project-brief.md '권한 위반 검색 0건'. 품질 점수와 무관한 절대 조건이다.",
+
+  "performance_reference": {
+    "note": "gate는 아래 값을 판정에 쓰지 않는다. 성능 판정은 부하시험 결과 레코드와 validate-result가 담당한다. 여기에는 alert threshold의 타당성을 검토할 때 참조하려고 남긴다.",
+    "p95_ttft_ms_server": 131.616,
+    "p95_ttft_ms_user": 1287.306,
+    "aggregate_output_tokens_per_s": 315.3,
+    "peak_vram_gib": 21.961,
+    "error_rate": 0.0,
+    "oom_count": 0,
+    "measured_on": "NVIDIA RTX A6000 (Ampere), driver 535.288.01, CUDA 12.2, vLLM 0.9.2, torch 2.7.0+cu126",
+    "evidence_type": "memory-budget-emulation",
+    "claim_scope": "memory-fit-and-host-observed-performance"
+  }
+}

@@ -1,0 +1,24 @@
+# FinLLM Lab v0.2 — DCGM exporter field 선택 (B파트 소유)
+#
+# 기본 counters 파일에는 DCGM_FI_DEV_FB_TOTAL이 없어서 "GPU memory total"
+# (완료 조건 10)을 수집할 수 없다. 그래서 전체 기본값을 쓰는 대신 목적이 있는
+# field만 명시적으로 고른다. 각 줄은 dashboard 질문 또는 alert 하나에 대응한다.
+#
+# format: DCGM FIELD, prometheus metric type, help
+
+# "GPU가 포화되는가?"
+DCGM_FI_DEV_GPU_UTIL,          gauge, GPU utilization (in %).
+DCGM_FI_DEV_MEM_COPY_UTIL,     gauge, Memory utilization (in %).
+
+# "VRAM이 위험 수준인가?" — FinLLMGPUMemoryAboveProfileClass alert가 FB_USED를 쓴다
+DCGM_FI_DEV_FB_USED,           gauge, Framebuffer memory used (in MiB).
+DCGM_FI_DEV_FB_FREE,           gauge, Framebuffer memory free (in MiB).
+DCGM_FI_DEV_FB_TOTAL,          gauge, Total framebuffer memory (in MiB).
+
+# throttle/전력 진단 — ops/runbooks/high-latency.md의 확인 항목
+DCGM_FI_DEV_POWER_USAGE,       gauge, Power draw (in W).
+DCGM_FI_DEV_GPU_TEMP,          gauge, GPU temperature (in C).
+DCGM_FI_DEV_SM_CLOCK,          gauge, SM clock frequency (in MHz).
+
+# FinLLMGPUXidError alert
+DCGM_FI_DEV_XID_ERRORS,        gauge, Value of the last XID error encountered.

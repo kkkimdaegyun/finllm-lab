@@ -1,0 +1,92 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "cd93a8a2-d34f-41a7-87f0-6e0c8b83b2fa",
+  "timestamp_utc": "2026-08-08T12:59:51.937589+00:00",
+  "profile_id": "profile-a",
+  "evidence_type": "memory-budget-emulation",
+  "claim_scope": "memory-fit-and-host-observed-performance",
+  "hardware": {
+    "gpu_model": "NVIDIA RTX A6000",
+    "gpu_count": 1,
+    "physical_vram_gib": 48,
+    "power_limit_w": 300.0,
+    "driver_version": "535.288.01",
+    "cuda_version": "12.2"
+  },
+  "software": {
+    "vllm_version": "0.9.2",
+    "torch_version": "2.7.0+cu126",
+    "transformers_version": "4.53.2"
+  },
+  "model": {
+    "id": "Qwen/Qwen3-14B-AWQ",
+    "revision": "31c69efc29464b6bb0aee1398b5a7b50a99340c3",
+    "tokenizer_revision": "31c69efc29464b6bb0aee1398b5a7b50a99340c3",
+    "parameter_billions": 14.8,
+    "quantization": "awq",
+    "dtype": "auto",
+    "max_model_len": 8192
+  },
+  "generation": {
+    "thinking_mode": false,
+    "temperature": 0.7,
+    "top_p": 0.8,
+    "top_k": 20,
+    "min_p": 0.0,
+    "seed": 42,
+    "max_tokens": 256
+  },
+  "vllm": {
+    "gpu_memory_utilization": 0.46,
+    "memory_budget_mode": "deployment-matched",
+    "max_num_seqs": 10,
+    "tensor_parallel_size": 1,
+    "command": "vllm serve Qwen/Qwen3-14B-AWQ --revision 31c69efc29464b6bb0aee1398b5a7b50a99340c3 --tokenizer-revision 31c69efc29464b6bb0aee1398b5a7b50a99340c3 --served-model-name Qwen/Qwen3-14B-AWQ --gpu-memory-utilization 0.46 --max-model-len 8192 --max-num-seqs 10 --tensor-parallel-size 1 --port 8000 --quantization awq",
+    "kv_cache_tokens": 77904,
+    "max_concurrency_at_max_model_len": 9.51,
+    "memory_breakdown_gib": {
+      "model_weights": 9.3666,
+      "kv_cache": 11.89,
+      "cuda_graphs": 3.51
+    }
+  },
+  "rag": {
+    "corpus_version": "corpus-v0.1",
+    "eval_set_version": "eval-v0.1",
+    "retriever_config_hash": "11d1f8cfeb42",
+    "prompt_revision": "prompt-v0.1",
+    "retrieval_top_k": 8,
+    "frozen_retrieval": true
+  },
+  "workload": {
+    "concurrency": 10,
+    "request_count": 30,
+    "repetition": 2
+  },
+  "metrics": {
+    "quality_score": 98.333,
+    "answer_correctness": 100.0,
+    "groundedness": 95.0,
+    "citation_accuracy": 100.0,
+    "abstention_safety": 98.333,
+    "p50_ttft_ms": 286.305,
+    "p95_ttft_ms": 300.48,
+    "p95_e2e_ms": 5022.998,
+    "aggregate_output_tokens_per_s": 57.029,
+    "peak_vram_gib": 25.67,
+    "error_rate": 0.0,
+    "oom_count": 0,
+    "p95_client_queue_ms": 6479.309,
+    "p95_user_ttft_ms": 6764.984,
+    "p95_user_e2e_ms": 10466.591,
+    "acl_violations": 0,
+    "injection_successes": 1
+  },
+  "decision": {
+    "status": "pending",
+    "reason": "재측정(retriever 11d1f8cfeb42). 보수적 executor 예산 0.46에서도 모든 hard gate를 통과했다. 총 GPU 사용량 25.67GiB로 24GB 카드 물리 용량을 초과하므로 실제 24GB 적합성은 이 실행만으로 주장할 수 없다.",
+    "monthly_cost_estimate": null,
+    "currency": null
+  },
+  "notes": "A6000 1장(GPU index 1)에서 deployment-matched 예산으로 측정. 지연시간과 처리량은 A6000 관측값이며 대상 카드 성능이 아니다."
+}

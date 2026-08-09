@@ -1,0 +1,224 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/finllm-lab/run-result.schema.json",
+  "title": "FinLLM Lab Run Result",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "timestamp_utc",
+    "profile_id",
+    "evidence_type",
+    "claim_scope",
+    "hardware",
+    "software",
+    "model",
+    "generation",
+    "vllm",
+    "rag",
+    "workload",
+    "metrics",
+    "decision"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "timestamp_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "profile_id": {
+      "enum": [
+        "profile-a",
+        "profile-b",
+        "reference",
+        "quality-reference-2xa6000"
+      ]
+    },
+    "evidence_type": {
+      "enum": [
+        "memory-budget-emulation",
+        "native-gpu-validation",
+        "quality-reference"
+      ]
+    },
+    "claim_scope": {
+      "enum": [
+        "memory-fit-and-host-observed-performance",
+        "native-target-gpu-performance",
+        "quality-ceiling-only"
+      ]
+    },
+    "hardware": {
+      "type": "object",
+      "required": [
+        "gpu_model",
+        "gpu_count",
+        "physical_vram_gib",
+        "driver_version",
+        "cuda_version"
+      ],
+      "properties": {
+        "gpu_model": {"type": "string"},
+        "gpu_count": {"type": "integer", "minimum": 1},
+        "physical_vram_gib": {"type": "number", "exclusiveMinimum": 0},
+        "power_limit_w": {"type": ["number", "null"]},
+        "driver_version": {"type": "string"},
+        "cuda_version": {"type": "string"}
+      },
+      "additionalProperties": true
+    },
+    "software": {
+      "type": "object",
+      "required": ["vllm_version", "torch_version"],
+      "properties": {
+        "vllm_version": {"type": "string"},
+        "torch_version": {"type": "string"}
+      },
+      "additionalProperties": true
+    },
+    "model": {
+      "type": "object",
+      "required": [
+        "id",
+        "revision",
+        "parameter_billions",
+        "quantization",
+        "dtype",
+        "max_model_len"
+      ],
+      "properties": {
+        "id": {"type": "string"},
+        "revision": {"type": "string", "minLength": 1},
+        "tokenizer_revision": {"type": ["string", "null"]},
+        "parameter_billions": {"type": "number", "exclusiveMinimum": 0},
+        "quantization": {"type": "string"},
+        "dtype": {"type": "string"},
+        "max_model_len": {"type": "integer", "minimum": 1}
+      },
+      "additionalProperties": true
+    },
+    "generation": {
+      "type": "object",
+      "required": [
+        "thinking_mode",
+        "temperature",
+        "top_p",
+        "top_k",
+        "min_p",
+        "seed",
+        "max_tokens"
+      ],
+      "properties": {
+        "thinking_mode": {"type": "boolean"},
+        "temperature": {"type": "number", "minimum": 0},
+        "top_p": {"type": "number", "minimum": 0, "maximum": 1},
+        "top_k": {"type": "integer", "minimum": 0},
+        "min_p": {"type": "number", "minimum": 0, "maximum": 1},
+        "seed": {"type": "integer"},
+        "max_tokens": {"type": "integer", "minimum": 1}
+      },
+      "additionalProperties": true
+    },
+    "vllm": {
+      "type": "object",
+      "required": [
+        "gpu_memory_utilization",
+        "memory_budget_mode",
+        "max_num_seqs"
+      ],
+      "properties": {
+        "gpu_memory_utilization": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1
+        },
+        "memory_budget_mode": {
+          "enum": [
+            "class-ceiling",
+            "deployment-matched",
+            "native"
+          ]
+        },
+        "max_num_seqs": {"type": "integer", "minimum": 1},
+        "tensor_parallel_size": {"type": "integer", "minimum": 1},
+        "command": {"type": "string"}
+      },
+      "additionalProperties": true
+    },
+    "rag": {
+      "type": "object",
+      "required": [
+        "corpus_version",
+        "eval_set_version",
+        "retriever_config_hash",
+        "prompt_revision"
+      ],
+      "properties": {
+        "corpus_version": {"type": "string"},
+        "eval_set_version": {"type": "string"},
+        "retriever_config_hash": {"type": "string"},
+        "prompt_revision": {"type": "string"}
+      },
+      "additionalProperties": true
+    },
+    "workload": {
+      "type": "object",
+      "required": ["concurrency", "request_count", "repetition"],
+      "properties": {
+        "concurrency": {"type": "integer", "minimum": 1},
+        "request_count": {"type": "integer", "minimum": 1},
+        "repetition": {"type": "integer", "minimum": 1}
+      },
+      "additionalProperties": true
+    },
+    "metrics": {
+      "type": "object",
+      "required": [
+        "quality_score",
+        "p50_ttft_ms",
+        "p95_ttft_ms",
+        "p95_e2e_ms",
+        "aggregate_output_tokens_per_s",
+        "peak_vram_gib",
+        "error_rate",
+        "oom_count"
+      ],
+      "properties": {
+        "quality_score": {"type": "number", "minimum": 0, "maximum": 100},
+        "answer_correctness": {"type": ["number", "null"], "minimum": 0, "maximum": 100},
+        "groundedness": {"type": ["number", "null"], "minimum": 0, "maximum": 100},
+        "citation_accuracy": {"type": ["number", "null"], "minimum": 0, "maximum": 100},
+        "abstention_safety": {"type": ["number", "null"], "minimum": 0, "maximum": 100},
+        "p50_ttft_ms": {"type": "number", "minimum": 0},
+        "p95_ttft_ms": {"type": "number", "minimum": 0},
+        "p95_e2e_ms": {"type": "number", "minimum": 0},
+        "aggregate_output_tokens_per_s": {"type": "number", "minimum": 0},
+        "peak_vram_gib": {"type": "number", "minimum": 0},
+        "error_rate": {"type": "number", "minimum": 0, "maximum": 1},
+        "oom_count": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": true
+    },
+    "decision": {
+      "type": "object",
+      "required": ["status", "reason"],
+      "properties": {
+        "status": {"enum": ["pass", "fail", "pending"]},
+        "reason": {"type": "string"},
+        "monthly_cost_estimate": {"type": ["number", "null"]},
+        "currency": {"type": ["string", "null"]}
+      },
+      "additionalProperties": true
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}

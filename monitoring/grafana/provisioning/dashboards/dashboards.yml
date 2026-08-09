@@ -1,0 +1,15 @@
+apiVersion: 1
+
+providers:
+  - name: finllm
+    orgId: 1
+    folder: FinLLM
+    type: file
+    disableDeletion: true
+    # dashboard는 파일이 유일한 출처다. UI에서 고친 것은 재시작하면 사라진다.
+    # 이것이 의도한 동작이다 — dashboard도 version-controlled여야 한다.
+    allowUiUpdates: false
+    updateIntervalSeconds: 30
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: false

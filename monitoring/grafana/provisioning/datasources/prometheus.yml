@@ -1,0 +1,14 @@
+apiVersion: 1
+
+datasources:
+  - name: FinLLM-Prometheus
+    uid: finllm-prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false
+    jsonData:
+      # prometheus.yml의 scrape_interval과 일치시킨다. 어긋나면 rate() 그래프가
+      # 실제보다 매끄럽거나 끊겨 보인다.
+      timeInterval: 5s

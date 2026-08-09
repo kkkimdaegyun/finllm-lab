@@ -1,0 +1,93 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "c1801a6d-43e7-450f-9cfb-b28e90ec9f3b",
+  "timestamp_utc": "2026-08-08T13:22:59.446939+00:00",
+  "profile_id": "profile-a",
+  "evidence_type": "memory-budget-emulation",
+  "claim_scope": "memory-fit-and-host-observed-performance",
+  "hardware": {
+    "gpu_model": "NVIDIA RTX A6000",
+    "gpu_count": 1,
+    "physical_vram_gib": 48,
+    "power_limit_w": 300.0,
+    "driver_version": "535.288.01",
+    "cuda_version": "12.2"
+  },
+  "software": {
+    "vllm_version": "0.9.2",
+    "torch_version": "2.7.0+cu126",
+    "transformers_version": "4.53.2"
+  },
+  "model": {
+    "id": "Qwen/Qwen3-14B-AWQ",
+    "revision": "31c69efc29464b6bb0aee1398b5a7b50a99340c3",
+    "tokenizer_revision": "31c69efc29464b6bb0aee1398b5a7b50a99340c3",
+    "parameter_billions": 14.8,
+    "quantization": "awq",
+    "dtype": "auto",
+    "max_model_len": 8192
+  },
+  "generation": {
+    "thinking_mode": false,
+    "temperature": 0.7,
+    "top_p": 0.8,
+    "top_k": 20,
+    "min_p": 0.0,
+    "seed": 42,
+    "max_tokens": 256
+  },
+  "vllm": {
+    "gpu_memory_utilization": 0.5,
+    "memory_budget_mode": "class-ceiling",
+    "max_num_seqs": 10,
+    "tensor_parallel_size": 1,
+    "command": "vllm serve Qwen/Qwen3-14B-AWQ --revision 31c69efc29464b6bb0aee1398b5a7b50a99340c3 --tokenizer-revision 31c69efc29464b6bb0aee1398b5a7b50a99340c3 --served-model-name Qwen/Qwen3-14B-AWQ --gpu-memory-utilization 0.50 --max-model-len 8192 --max-num-seqs 10 --tensor-parallel-size 1 --port 8000 --quantization awq --enforce-eager",
+    "enforce_eager": true,
+    "kv_cache_tokens": 90512,
+    "max_concurrency_at_max_model_len": 11.05,
+    "memory_breakdown_gib": {
+      "model_weights": 9.3666,
+      "kv_cache": 13.81,
+      "cuda_graphs": null
+    }
+  },
+  "rag": {
+    "corpus_version": "corpus-v0.1",
+    "eval_set_version": "eval-v0.1",
+    "retriever_config_hash": "11d1f8cfeb42",
+    "prompt_revision": "prompt-v0.1",
+    "retrieval_top_k": 8,
+    "frozen_retrieval": true
+  },
+  "workload": {
+    "concurrency": 10,
+    "request_count": 30,
+    "repetition": 3
+  },
+  "metrics": {
+    "quality_score": 97.667,
+    "answer_correctness": 100.0,
+    "groundedness": 93.333,
+    "citation_accuracy": 100.0,
+    "abstention_safety": 96.667,
+    "p50_ttft_ms": 67.13,
+    "p95_ttft_ms": 131.567,
+    "p95_e2e_ms": 965.327,
+    "aggregate_output_tokens_per_s": 312.938,
+    "peak_vram_gib": 23.836,
+    "error_rate": 0.0,
+    "oom_count": 0,
+    "p95_client_queue_ms": 1267.169,
+    "p95_user_ttft_ms": 1316.989,
+    "p95_user_e2e_ms": 1878.301,
+    "acl_violations": 0,
+    "injection_successes": 2
+  },
+  "decision": {
+    "status": "pending",
+    "reason": "CUDA graph 없이 측정. 처리량이 57.2에서 313.2 tok/s로 5.5배 상승했고 사용자 체감 P95 TTFT가 6,750ms에서 1,329ms로 2초 목표 안에 들어왔다. peak VRAM 23.84GiB로 24GB 안에 적합하며 최대 동시성 11.05로 요구치를 만족한다. graph 사용 시의 처리량 열세는 AWQ 역양자화가 아니라 CUDA graph 경로가 원인이었다.",
+    "monthly_cost_estimate": null,
+    "currency": null
+  },
+  "notes": "A6000 1장(GPU index 1)에서 class-ceiling 예산으로 측정. 지연시간과 처리량은 A6000 관측값이며 대상 카드 성능이 아니다."
+}

@@ -1,0 +1,9 @@
+[
+  {
+    "targets": ["host.docker.internal:8000"],
+    "labels": {
+      "deployment": "host-verification",
+      "note": "B파트 검증용. A파트 compose가 뜨면 vllm:8000으로 교체한다"
+    }
+  }
+]

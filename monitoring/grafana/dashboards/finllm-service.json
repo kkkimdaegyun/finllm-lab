@@ -1,0 +1,432 @@
+{
+  "uid": "finllm-service",
+  "title": "FinLLM Service — Profile A",
+  "description": "패널은 예쁜 그래프가 아니라 8개 운영 질문에 답하기 위해 배치했다. 각 패널 제목이 그 질문이다. threshold 선은 configs/profiles.json의 benchmark_policy에서 온 값이다.",
+  "tags": ["finllm", "profile-a", "slo"],
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": false,
+  "refresh": "5s",
+  "time": { "from": "now-15m", "to": "now" },
+  "timezone": "browser",
+  "templating": { "list": [] },
+  "annotations": { "list": [] },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "gateway ready",
+      "description": "finllm_ready. A파트가 아직 배포되지 않았으면 No data가 정상이다.",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "finllm-prometheus" },
+      "targets": [
+        { "refId": "A", "expr": "finllm_ready", "legendFormat": "ready" }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "A파트 미배포",
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "NOT READY", "color": "red", "index": 0 } } },
+            { "type": "value", "options": { "1": { "text": "READY", "color": "green", "index": 1 } } }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "text", "value": null }] }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "vLLM upstream up",
+      "description": "up{job=\"vllm\"}. INC-001에서 이 값이 1에서 0으로 떨어지는 것을 관측했다.",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "finllm-prometheus" },
+      "targets": [
+        { "refId": "A", "expr": "up{job=\"vllm\"}", "legendFormat": "vllm" }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "DOWN", "color": "red", "index": 0 } } },
+            { "type": "value", "options": { "1": { "text": "UP", "color": "green", "index": 1 } } }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "text", "value": null }] }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "vLLM 처리 요청 (running)",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "finllm-prometheus" },
+      "targets": [
+        { "refId": "A", "expr": "sum(vllm:num_requests_running)", "legendFormat": "running" }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "생성 토큰 처리량",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "finllm-prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(vllm:generation_tokens_total[1m]))",
+          "legendFormat": "tok/s"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 1,
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] }
+        },
+        "overrides": []
+      }
+    },
+
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "지금 요청이 들어오는가?",
+      "description": "gateway 요청률(status별)과 vLLM 성공 요청률. gateway 계열은 A파트 배포 후에 채워진다.",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 4 },
+      "datasource": { "type": "prometheus", "uid": "finllm-prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (status) (rate(finllm_requests_total[1m]))",
+          "legendFormat": "gateway {{status}}"
+        },
+        {
+          "refId": "B",
+          "expr": "sum(rate(vllm:request_success_total[1m]))",
+          "legendFormat": "vllm success"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": { "fillOpacity": 10, "lineWidth": 2, "showPoints": "never" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "오류가 증가하는가? (SLO 1%)",
+      "description": "threshold 0.01 = configs/profiles.json benchmark_policy.error_rate_max. 점선이 SLO다.",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 4 },
+      "datasource": { "type": "prometheus", "uid": "finllm-prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(finllm_requests_total{status=~\"5..\"}[1m])) / sum(rate(finllm_requests_total[1m]))",
+          "legendFormat": "gateway 5xx ratio"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "custom": {
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "thresholdsStyle": { "mode": "dashed" }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 0.01 }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 12,
+      "type": "timeseries",
+      "title": "P95 latency가 악화되는가? (SLO 2s)",
+      "description": "threshold 2s = benchmark_policy.p95_ttft_ms_max. vLLM 계열은 bucket에 le=2.0이 없어 [1.0,2.5] 선형보간값이며 gate 판정에 쓰지 않는다.",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 4 },
+      "datasource": { "type": "prometheus", "uid": "finllm-prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(finllm_generation_ttft_seconds_bucket[1m])))",
+          "legendFormat": "gateway TTFT p95"
+        },
+        {
+          "refId": "B",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(vllm:time_to_first_token_seconds_bucket[1m])))",
+          "legendFormat": "vllm TTFT p95 (보간)"
+        },
+        {
+          "refId": "C",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(vllm:e2e_request_latency_seconds_bucket[1m])))",
+          "legendFormat": "vllm E2E p95"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "min": 0,
+          "custom": {
+            "fillOpacity": 0,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "thresholdsStyle": { "mode": "dashed" }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 2 }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+
+    {
+      "id": 20,
+      "type": "timeseries",
+      "title": "retrieval이 병목인가, generation이 병목인가?",
+      "description": "같은 축에 P95를 겹쳐 둔다. 둘의 상대적 크기가 답이다. queue time은 vLLM 대기 시간이라 세 번째 축으로 함께 본다.",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "datasource": { "type": "prometheus", "uid": "finllm-prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(finllm_retrieval_duration_seconds_bucket[1m])))",
+          "legendFormat": "retrieval p95"
+        },
+        {
+          "refId": "B",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(finllm_generation_duration_seconds_bucket[1m])))",
+          "legendFormat": "generation p95"
+        },
+        {
+          "refId": "C",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(vllm:request_queue_time_seconds_bucket[1m])))",
+          "legendFormat": "vllm queue time p95"
+        },
+        {
+          "refId": "D",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(vllm:request_decode_time_seconds_bucket[1m])))",
+          "legendFormat": "vllm decode p95"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "min": 0,
+          "custom": { "fillOpacity": 0, "lineWidth": 2, "showPoints": "never" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 21,
+      "type": "timeseries",
+      "title": "queue가 쌓이는가?",
+      "description": "waiting > 0 은 설계 동시성 10(max_num_seqs)을 넘겼다는 뜻이다. preemption은 KV cache 압박의 직접 신호다.",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "datasource": { "type": "prometheus", "uid": "finllm-prometheus" },
+      "targets": [
+        { "refId": "A", "expr": "sum(vllm:num_requests_waiting)", "legendFormat": "vllm waiting" },
+        { "refId": "B", "expr": "sum(vllm:num_requests_running)", "legendFormat": "vllm running" },
+        { "refId": "C", "expr": "sum(finllm_requests_in_flight)", "legendFormat": "gateway in-flight" },
+        {
+          "refId": "D",
+          "expr": "sum(increase(vllm:num_preemptions_total[1m]))",
+          "legendFormat": "preemptions/1m"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "custom": {
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "thresholdsStyle": { "mode": "dashed" }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 10 }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+
+    {
+      "id": 30,
+      "type": "timeseries",
+      "title": "GPU가 포화되는가?",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 20 },
+      "datasource": { "type": "prometheus", "uid": "finllm-prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "DCGM_FI_DEV_GPU_UTIL",
+          "legendFormat": "gpu{{gpu}} sm util"
+        },
+        {
+          "refId": "B",
+          "expr": "DCGM_FI_DEV_MEM_COPY_UTIL",
+          "legendFormat": "gpu{{gpu}} mem bw util"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "custom": { "fillOpacity": 10, "lineWidth": 2, "showPoints": "never" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 31,
+      "type": "timeseries",
+      "title": "VRAM이 위험 수준인가? (Profile A 24GB class)",
+      "description": "점선 24576 MiB = configs/profiles.json profile-a.vram_class_gib. 이 선을 넘으면 대상 24GB 카드에 더 이상 들어가지 않는다. v0.1 실측 peak는 21.96GiB.",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 20 },
+      "datasource": { "type": "prometheus", "uid": "finllm-prometheus" },
+      "targets": [
+        { "refId": "A", "expr": "DCGM_FI_DEV_FB_USED", "legendFormat": "gpu{{gpu}} used" },
+        { "refId": "B", "expr": "DCGM_FI_DEV_FB_TOTAL", "legendFormat": "gpu{{gpu}} total" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "mbytes",
+          "min": 0,
+          "custom": {
+            "fillOpacity": 8,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "thresholdsStyle": { "mode": "dashed" }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 24576 }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 32,
+      "type": "timeseries",
+      "title": "KV cache 여유",
+      "description": "4-bit 양자화의 이득이 KV cache 여유로 나타난다는 ADR-0004의 결론을 운영 중에 계속 확인하는 패널이다.",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 20 },
+      "datasource": { "type": "prometheus", "uid": "finllm-prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "vllm:gpu_cache_usage_perc",
+          "legendFormat": "gpu cache usage"
+        },
+        {
+          "refId": "B",
+          "expr": "vllm:kv_cache_usage_perc",
+          "legendFormat": "kv cache usage"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "custom": {
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "thresholdsStyle": { "mode": "dashed" }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 0.9 }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+
+    {
+      "id": 40,
+      "type": "table",
+      "title": "provenance — 지금 무엇이 돌고 있는가",
+      "description": "finllm_build_info의 라벨. ops/release/current-release.json과 일치해야 한다. rollback 후 이 두 값이 어긋나면 어떤 버전이 도는지 알 수 없다.",
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 28 },
+      "datasource": { "type": "prometheus", "uid": "finllm-prometheus" },
+      "targets": [
+        { "refId": "A", "expr": "finllm_build_info", "format": "table", "instant": true }
+      ],
+      "options": { "showHeader": true },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "A파트 미배포 — finllm_build_info 없음",
+          "custom": { "align": "auto" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "text", "value": null }] }
+        },
+        "overrides": []
+      },
+      "transformations": [
+        { "id": "organize", "options": { "excludeByName": { "Time": true, "Value": true } } }
+      ]
+    }
+  ]
+}

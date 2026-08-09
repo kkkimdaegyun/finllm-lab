@@ -1,0 +1,89 @@
+{
+  "schema_version": "1.0.0",
+  "emulation_host": {
+    "gpu_model": "NVIDIA RTX A6000",
+    "architecture": "Ampere",
+    "physical_vram_gib": 48,
+    "memory_bandwidth_gbps": 768
+  },
+  "native_run_defaults": {
+    "gpu_memory_utilization": 0.92,
+    "note": "Executor budget used when a run owns the whole target card"
+  },
+  "benchmark_policy": {
+    "scenario": "financial-internal-document-rag",
+    "concurrency": 10,
+    "p95_ttft_ms_max": 2000,
+    "error_rate_max": 0.01,
+    "oom_count_max": 0,
+    "quality_score_min": 90,
+    "repetitions": 3
+  },
+  "deployment_profiles": {
+    "profile-a": {
+      "name": "Production Profile A",
+      "vram_class_gib": 24,
+      "example_hardware": "NVIDIA GeForce RTX 4090",
+      "target_architecture": "Ada Lovelace",
+      "target_memory_bandwidth_gbps": 1008,
+      "a6000_gpu_memory_utilization": 0.50,
+      "a6000_executor_budget_gib": 24.0,
+      "deployment_matched_a6000_utilization": 0.46,
+      "deployment_matched_executor_budget_gib": 22.08,
+      "intent": "Lowest-cost single-GPU configuration that satisfies the service SLO",
+      "primary_candidates": [
+        "7-9B BF16",
+        "14B AWQ/GPTQ 4-bit"
+      ],
+      "stretch_candidates": [
+        "30-32B 4-bit"
+      ]
+    },
+    "profile-b": {
+      "name": "Production Profile B",
+      "vram_class_gib": 32,
+      "example_hardware": "NVIDIA GeForce RTX 5090",
+      "target_architecture": "Blackwell",
+      "target_memory_bandwidth_gbps": 1792,
+      "a6000_gpu_memory_utilization": 0.67,
+      "a6000_executor_budget_gib": 32.16,
+      "deployment_matched_a6000_utilization": 0.61,
+      "deployment_matched_executor_budget_gib": 29.28,
+      "intent": "Higher-quality consumer-GPU-class single-card configuration",
+      "primary_candidates": [
+        "14B AWQ/GPTQ 4-bit",
+        "30-32B 4-bit"
+      ],
+      "stretch_candidates": [
+        "14B BF16"
+      ]
+    },
+    "reference": {
+      "name": "Reference Profile",
+      "vram_class_gib": 48,
+      "example_hardware": "NVIDIA RTX A6000",
+      "target_architecture": "Ampere",
+      "target_memory_bandwidth_gbps": 768,
+      "a6000_gpu_memory_utilization": 0.92,
+      "a6000_executor_budget_gib": 44.16,
+      "deployment_matched_a6000_utilization": 0.92,
+      "deployment_matched_executor_budget_gib": 44.16,
+      "intent": "Enterprise/workstation-class single-GPU quality reference",
+      "primary_candidates": [
+        "14B BF16",
+        "30-32B INT8 or 4-bit"
+      ],
+      "stretch_candidates": []
+    }
+  },
+  "quality_reference": {
+    "id": "quality-reference-2xa6000",
+    "name": "Quality Reference",
+    "deployment_profile": false,
+    "gpu_model": "NVIDIA RTX A6000",
+    "gpu_count": 2,
+    "tensor_parallel_size": 2,
+    "gpu_memory_utilization_per_gpu": 0.92,
+    "intent": "Measure the quality ceiling; never present as the cost-constrained deployment recommendation"
+  }
+}

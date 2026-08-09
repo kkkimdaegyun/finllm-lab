@@ -1,0 +1,92 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "6aac8b8d-b2b0-4655-acf0-4ad0302df6e7",
+  "timestamp_utc": "2026-08-08T12:50:42.944206+00:00",
+  "profile_id": "profile-a",
+  "evidence_type": "memory-budget-emulation",
+  "claim_scope": "memory-fit-and-host-observed-performance",
+  "hardware": {
+    "gpu_model": "NVIDIA RTX A6000",
+    "gpu_count": 1,
+    "physical_vram_gib": 48,
+    "power_limit_w": 300.0,
+    "driver_version": "535.288.01",
+    "cuda_version": "12.2"
+  },
+  "software": {
+    "vllm_version": "0.9.2",
+    "torch_version": "2.7.0+cu126",
+    "transformers_version": "4.53.2"
+  },
+  "model": {
+    "id": "Qwen/Qwen3-8B",
+    "revision": "b968826d9c46dd6066d109eabc6255188de91218",
+    "tokenizer_revision": "b968826d9c46dd6066d109eabc6255188de91218",
+    "parameter_billions": 8.2,
+    "quantization": "none",
+    "dtype": "auto",
+    "max_model_len": 8192
+  },
+  "generation": {
+    "thinking_mode": false,
+    "temperature": 0.7,
+    "top_p": 0.8,
+    "top_k": 20,
+    "min_p": 0.0,
+    "seed": 42,
+    "max_tokens": 256
+  },
+  "vllm": {
+    "gpu_memory_utilization": 0.5,
+    "memory_budget_mode": "class-ceiling",
+    "max_num_seqs": 10,
+    "tensor_parallel_size": 1,
+    "command": "vllm serve Qwen/Qwen3-8B --revision b968826d9c46dd6066d109eabc6255188de91218 --tokenizer-revision b968826d9c46dd6066d109eabc6255188de91218 --served-model-name Qwen/Qwen3-8B --gpu-memory-utilization 0.50 --max-model-len 8192 --max-num-seqs 10 --tensor-parallel-size 1 --port 8000",
+    "kv_cache_tokens": 59904,
+    "max_concurrency_at_max_model_len": 7.31,
+    "memory_breakdown_gib": {
+      "model_weights": 15.2683,
+      "kv_cache": 8.23,
+      "cuda_graphs": 2.2
+    }
+  },
+  "rag": {
+    "corpus_version": "corpus-v0.1",
+    "eval_set_version": "eval-v0.1",
+    "retriever_config_hash": "11d1f8cfeb42",
+    "prompt_revision": "prompt-v0.1",
+    "retrieval_top_k": 8,
+    "frozen_retrieval": false
+  },
+  "workload": {
+    "concurrency": 10,
+    "request_count": 30,
+    "repetition": 3
+  },
+  "metrics": {
+    "quality_score": 95.259,
+    "answer_correctness": 97.5,
+    "groundedness": 91.667,
+    "citation_accuracy": 96.296,
+    "abstention_safety": 95.0,
+    "p50_ttft_ms": 56.392,
+    "p95_ttft_ms": 74.599,
+    "p95_e2e_ms": 975.299,
+    "aggregate_output_tokens_per_s": 295.399,
+    "peak_vram_gib": 26.137,
+    "error_rate": 0.0,
+    "oom_count": 0,
+    "p95_client_queue_ms": 1293.461,
+    "p95_user_ttft_ms": 1347.796,
+    "p95_user_e2e_ms": 2079.674,
+    "acl_violations": 0,
+    "injection_successes": 3
+  },
+  "decision": {
+    "status": "pending",
+    "reason": "재측정(retriever 11d1f8cfeb42). 모든 hard gate 통과. 품질 95.3으로 상승했으나 8,192 토큰 기준 최대 동시성 7.31로 요구치 10에 미달하고 injection 5문항 중 3문항에서 문서 내 지시를 따랐다. 사용자 체감 P95 TTFT 1.35초로 14B AWQ 대비 5배 유리하다.",
+    "monthly_cost_estimate": null,
+    "currency": null
+  },
+  "notes": "A6000 1장(GPU index 1)에서 class-ceiling 예산으로 측정. 지연시간과 처리량은 A6000 관측값이며 대상 카드 성능이 아니다."
+}

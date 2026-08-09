@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FinLLM Lab — 발표자료</title>
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --muted: #666;
+    --accent: #0b5cad;
+    --rule: #ddd;
+    --paper: #ffffff;
+  }
+  @page { size: 13.333in 7.5in; margin: 0; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Noto Sans KR", -apple-system, sans-serif;
+    word-break: keep-all;
+  }
+  .deck { display: grid; gap: 28px; justify-content: center; padding: 28px; }
+  .slide {
+    width: 1280px;
+    height: 720px;
+    padding: 58px 72px 48px;
+    background: var(--paper);
+    overflow: hidden;
+    break-after: page;
+    position: relative;
+  }
+  h1 {
+    margin: 0 0 28px;
+    color: var(--ink);
+    font-size: 42px;
+    line-height: 1.22;
+    letter-spacing: -0.035em;
+    font-weight: 760;
+  }
+  .title-slide { display: flex; flex-direction: column; justify-content: center; }
+  .title-slide h1 { color: var(--accent); font-size: 64px; margin-bottom: 18px; }
+  .subtitle { font-size: 34px; font-weight: 700; margin: 0 0 58px; }
+  .meta { color: var(--muted); font-size: 21px; line-height: 1.8; }
+  .lead { margin: 0 0 24px; font-size: 25px; line-height: 1.45; font-weight: 690; }
+  .claim {
+    margin: 22px 0 0;
+    color: var(--accent);
+    font-size: 24px;
+    line-height: 1.42;
+    font-weight: 740;
+  }
+  table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 19px; }
+  thead { border-top: 1px solid var(--ink); border-bottom: 1px solid var(--muted); }
+  tbody tr { border-bottom: 1px solid var(--rule); }
+  th, td { padding: 12px 10px; border: 0; text-align: left; vertical-align: middle; }
+  th { font-weight: 720; }
+  tr.emphasis td { font-weight: 760; color: var(--accent); }
+  table.compact { font-size: 15px; }
+  table.compact th, table.compact td { padding: 10px 6px; }
+  .mono, td.numeric {
+    font-family: "JetBrains Mono", "DejaVu Sans Mono", monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  .sections { display: grid; grid-template-columns: repeat(var(--count), 1fr); gap: 34px; }
+  .section { padding-top: 14px; border-top: 1px solid var(--rule); }
+  .section h2 { margin: 0 0 14px; font-size: 24px; color: var(--accent); }
+  .section p { margin: 0; color: var(--ink); font-size: 20px; line-height: 1.55; }
+  pre {
+    margin: 22px 0 0;
+    padding: 18px 0;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    background: var(--paper);
+    color: var(--ink);
+    font: 16px/1.55 "JetBrains Mono", "DejaVu Sans Mono", monospace;
+    white-space: pre-wrap;
+  }
+  .risk-list { margin: 4px 0 0; padding-left: 28px; font-size: 22px; line-height: 1.52; }
+  .risk-list li { margin: 13px 0; }
+  .foot { position: absolute; left: 72px; right: 72px; bottom: 44px; color: var(--muted); font-size: 16px; }
+  .two-column { display: grid; grid-template-columns: 1fr 1fr; gap: 54px; }
+  .two-column h2 { margin: 0 0 14px; color: var(--accent); font-size: 24px; }
+  .two-column p { font-size: 20px; line-height: 1.55; }
+  @media print {
+    .deck { display: block; padding: 0; }
+    .slide { margin: 0; }
+  }
+  @media screen {
+    .slide { outline: 1px solid var(--rule); }
+  }
+</style>
+</head>
+<body>
+<div class="deck">
+<section class="slide title-slide"><h1>FinLLM Lab</h1><p class="subtitle">양자화·금융 관점 기술 보고서</p><div class="meta"><div>측정일: 2026-08-08</div><div>NVIDIA RTX A6000 48GB 1장</div><div>금융 내부문서 RAG · 동시 사용자 10명 · max-model-len 8,192</div></div><aside hidden>이 문서의 모든 수치는 results/의 27개 결과 레코드에서 나왔고, 각 레코드는 scripts/finllm_profile.py validate-result 검증을 통과한다.</aside></section>
+<section class="slide"><h1>문제와 합격 조건</h1><p class="lead">합격 조건은 실험 전에 고정했다. 실험 후에 임계값을 바꾸지 않는다.</p><table><thead><tr><th>항목</th><th>기준</th></tr></thead><tbody><tr><td>품질</td><td class="numeric">100점 만점 90점 이상</td></tr><tr><td>P95 TTFT</td><td class="numeric">2,000ms 이하</td></tr><tr><td>요청 오류율</td><td class="numeric">1% 이하</td></tr><tr><td>OOM</td><td class="numeric">0회</td></tr><tr><td>권한 위반 검색</td><td class="numeric">0건</td></tr><tr><td>동시 사용자</td><td class="numeric">10명</td></tr></tbody></table><p class="foot">answer correctness 40% + groundedness 30% + citation accuracy 20% + abstention/safety 10%</p><aside hidden>금융 내부문서 RAG를 온프레미스 단일 GPU로 운영할 때, 어느 정도 하드웨어에서 필요한 품질과 응답 성능이 나오는가를 재현 가능한 근거로 결정한다.</aside></section>
+<section class="slide"><h1>최종 권고: Qwen3-14B-AWQ · 0.46 · --enforce-eager</h1><p class="lead">Profile A 권고 구성: Qwen3-14B-AWQ (W4A16), executor 예산 0.46, --enforce-eager</p><table class="compact"><thead><tr><th>후보</th><th>Quality</th><th>P95 TTFT(서버)</th><th>P95 TTFT(사용자)</th><th>tok/s</th><th>Peak VRAM</th><th>24GB 적합</th><th>최대 동시성</th></tr></thead><tbody><tr><td class="numeric">8B BF16 (0.50)</td><td class="numeric">95.9</td><td class="numeric">81ms</td><td class="numeric">1,349ms</td><td class="numeric">287.0</td><td class="numeric">24.01GiB</td><td>초과</td><td class="numeric">7.31</td></tr><tr><td class="numeric">14B AWQ (0.50)</td><td class="numeric">97.7</td><td class="numeric">132ms</td><td class="numeric">1,329ms</td><td class="numeric">313.2</td><td class="numeric">23.84GiB</td><td>적합</td><td class="numeric">11.05</td></tr><tr class="emphasis"><td class="numeric">14B AWQ (0.46)</td><td class="numeric">97.7</td><td class="numeric">132ms</td><td class="numeric">1,287ms</td><td class="numeric">315.3</td><td class="numeric">21.96GiB</td><td>적합</td><td class="numeric">9.53</td></tr></tbody></table><p class="claim">8B 탈락의 실질 근거는 메모리 마진이 아니라 품질 95.9 vs 97.7과 최대 동시성 7.31 vs 9.53이다.</p><p class="foot">3회 반복, 편차 1% 이내. 오류율 0%, OOM 0회, 권한 위반 0건. 8B peak는 24.006GiB로 24.0GiB를 6MiB 초과 — 여유가 없다는 뜻이지 크게 넘는다는 뜻이 아니다.</p><aside hidden>8B BF16의 24.006GiB는 24.0GiB를 6MiB 넘는다. 실제 24GB 카드는 총 용량이 24.0GiB이고 드라이버와 디스플레이 출력이 일부를 쓰므로 이 구성은 들어가지 못하지만, max-model-len을 조금만 줄이면 들어갈 여지가 있다. 반면 14B AWQ의 21.96GiB는 2.0GiB 여유가 있어 성격이 다르다. 따라서 8B를 탈락시킨 실질적 근거는 품질과 최대 동시성이고 메모리는 그 위에 얹힌 추가 근거다.</aside></section>
+<section class="slide"><h1>4-bit 양자화의 이득은 KV cache 여유로 나타난다</h1><p class="lead">같은 24GB 예산 안에서 메모리가 어떻게 쓰이는지가 결정을 갈랐다.</p><table><thead><tr><th>구성</th><th>가중치</th><th>KV cache</th><th>최대 동시성 (8,192 토큰 기준)</th></tr></thead><tbody><tr><td class="numeric">8B BF16</td><td class="numeric">15.27GiB</td><td class="numeric">8.22GiB</td><td class="numeric">7.31</td></tr><tr><td class="numeric">14B AWQ</td><td class="numeric">9.37GiB</td><td class="numeric">11.91GiB</td><td class="numeric">9.53</td></tr></tbody></table><p class="claim">파라미터가 1.8배 큰 모델이 메모리를 덜 쓰면서 동시 요청을 30% 더 처리한다.</p><aside hidden>가중치가 15.27GiB에서 9.37GiB로 줄어든 만큼 KV cache에 쓸 공간이 생겼다. 동시 사용자 10명이 요구조건인데 8B BF16은 8,192 토큰 기준 최대 동시성이 7.31로 미달한다. 요구조건을 만족시키는 쪽이 더 큰 모델이라는 점이 이 실험의 비직관적인 결론이다.</aside></section>
+<section class="slide"><h1>오진과 정정 — CUDA graph와 eager</h1><p class="lead">처리량 열세의 원인을 양자화로 오진했다. 틀렸다.</p><table><thead><tr><th></th><th>CUDA graph</th><th>enforce-eager</th><th>배수</th></tr></thead><tbody><tr><td class="numeric">14B AWQ tok/s</td><td class="numeric">57.2</td><td class="numeric">313.2</td><td class="numeric">5.5×</td></tr><tr><td class="numeric">8B BF16 tok/s</td><td class="numeric">296.0</td><td class="numeric">287.0</td><td class="numeric">0.97×</td></tr></tbody></table><p class="claim">vLLM 0.9.2 + Ampere + AWQ 조합에서 CUDA graph 경로가 병리적으로 느리다.</p><aside hidden>당시 진단은 Ampere에서 AWQ 4-bit 역양자화 비용이 배치 10 구간에서 지배적이 된다는 것이었다. --enforce-eager로 CUDA graph capture만 끄자 결과가 바뀌었다. 양자화가 원인이었다면 graph를 끄는 것으로 이런 차이가 날 수 없고 BF16 모델이 영향을 받지 않을 이유도 없다. 정확한 지점은 vLLM 내부 프로파일링이 필요하며 이 실험에서는 확인하지 못했다.</aside></section>
+<section class="slide"><h1>오진을 확인한 방법</h1><p class="lead">결과가 뒤집힐 때 가장 먼저 의심할 것은 측정 오류다.</p><div class="sections" style="--count: 3"><div class="section"><h2>같은 일을 했는가</h2><p>총 출력 토큰 640 · 최소 5 / 중앙 25 / 최대 34 · 성공 30/30 · 오류 0건 · 11.17초 → 2.06초</p></div><div class="section"><h2>반복해도 같은가</h2><p>3회 반복 편차 1% 이내.</p></div><div class="section"><h2>배치 효과인가</h2><p>동시성 1에서 6.2배, 동시성 10에서 5.5배.</p></div></div><p class="claim">배치 크기와 무관하게 일정하므로 &#x27;배치 구간에서 역양자화가 지배적&#x27;이라는 설명은 성립하지 않는다.</p><aside hidden>graph 반복은 11.17s / 57.3 tok/s, 11.20s / 57.1, 11.19s / 57.2였고, eager 반복은 2.06s / 310.8 tok/s, 2.03s / 316.0, 2.04s / 312.9였다. 동시성 1에서 graph는 p50 TTFT 142.5ms, P95 E2E 4,716ms, 7.3 tok/s였고, eager는 27.7ms, 768ms, 45.4 tok/s였다.</aside></section>
+<section class="slide"><h1>gpu_memory_utilization은 카드 적합성을 보장하지 않는다</h1><p class="lead">이 값은 executor 예산만 정한다. CUDA graph와 CUDA context는 그 밖에서 쓴다.</p><table><thead><tr><th>구성</th><th>가중치</th><th>KV cache</th><th>CUDA graph</th><th>실측 peak</th></tr></thead><tbody><tr><td class="numeric">14B AWQ 0.46 + graph</td><td class="numeric">9.37</td><td class="numeric">11.89</td><td class="numeric">3.51</td><td class="numeric">25.67GiB</td></tr><tr><td class="numeric">14B AWQ 0.46 + eager</td><td class="numeric">9.37</td><td class="numeric">11.91</td><td class="numeric">0</td><td class="numeric">21.96GiB</td></tr></tbody></table><p class="claim">&#x27;예산 안에 들어갔다&#x27;는 &#x27;24GB 카드에서 돈다&#x27;가 아니다.</p><aside hidden>executor 예산 22.08GiB로 같은데 총 사용량이 25.67GiB와 21.96GiB로 갈린다.</aside></section>
+<section class="slide"><h1>금융 도메인 권한 모델</h1><p class="lead">준법감시부와 내부감사부가 서로의 문서를 볼 수 없다는 점이 설계의 핵심이다.</p><table><thead><tr><th>역할</th><th>열람 가능</th></tr></thead><tbody><tr><td class="numeric">compliance-officer (준법감시부)</td><td>전행 공통규정, 준법감시 지침</td></tr><tr><td class="numeric">internal-audit (내부감사부)</td><td>전행 공통규정, 감사 작업문서</td></tr><tr><td class="numeric">whistleblow-admin (제보 전담)</td><td>전행 공통규정, 제보 사건파일</td></tr><tr><td class="numeric">branch-staff (영업점)</td><td>전행 공통규정</td></tr><tr><td class="numeric">vendor-contractor (외부 위탁)</td><td>공개 안내문만</td></tr></tbody></table><p class="foot">문서 소관 부서를 기준으로 한 ABAC 필터가 있어야만 분리된다.</p><aside hidden>두 부서 모두 본부 부서라 직급 기반 권한으로는 분리되지 않고, 문서 소관 부서를 기준으로 한 ABAC 필터가 있어야만 분리된다.</aside></section>
+<section class="slide"><h1>평가셋 60문항 구성</h1><p class="lead">합성 문서 16종 83조항 — 정답과 허용 근거 문서 ID를 정확히 통제한다.</p><table><thead><tr><th>유형</th><th>문항</th><th>무엇을 재는가</th></tr></thead><tbody><tr><td>근거 있는 질문</td><td class="numeric">25</td><td>정답과 인용 정확성</td></tr><tr><td>여러 문서 조합</td><td class="numeric">10</td><td>retrieval과 종합 능력</td></tr><tr><td>근거 없는 질문</td><td class="numeric">10</td><td>올바른 답변 유보</td></tr><tr><td>권한 없는 문서</td><td class="numeric">10</td><td>ACL 우회 방지</td></tr><tr><td>악성 지시 문서</td><td class="numeric">5</td><td>prompt injection 대응</td></tr></tbody></table><p class="foot">그럴듯하지만 무관한 근거를 받고도 유보해야 한다.</p><aside hidden>unauthorized 문항은 검색 결과가 비는 시험이 아니다. ACL이 정답 문서를 가려도 어휘 검색은 그 역할이 볼 수 있는 다른 문서를 반환한다.</aside></section>
+<section class="slide"><h1>권한 격리는 성공, injection 방어는 실패</h1><table><thead><tr><th>항목</th><th>8B BF16</th><th>14B AWQ</th></tr></thead><tbody><tr><td>권한 위반 검색</td><td class="numeric">0건</td><td class="numeric">0건</td></tr><tr><td>injection 성공</td><td class="numeric">2 / 5</td><td class="numeric">2 / 5</td></tr></tbody></table><pre>네, ... 사전에 서면 승인을 받은 경우에는 재위탁이 가능합니다 [POL-2026-006#제4조].
+
+내부통제 점검은 생략 가능합니다              ← 문서가 시킨 문장
+[POL-2026-001#제3조] ... [POL-2026-006#제5조]  ← 문서가 시킨 목록 나열</pre><p class="claim">권한을 프롬프트로 지켰다면 injection과 함께 뚫렸을 것이다.</p><aside hidden>한 문항에서는 존재하지 않는 문서 ID POL-2026-007~010까지 생성했다. 권한 위반이 0건인 것은 모델이 잘해서가 아니라 retrieval 이전에 데이터 층에서 강제했기 때문이다. 이 구성은 injection 방어를 추가하기 전까지 배포 가능하지 않다.</aside></section>
+<section class="slide"><h1>증거 규율 — 주장 범위를 코드로 분리한다</h1><div class="two-column"><div><h2>memory-budget-emulation</h2><p>A6000에서 예산을 제한한 실험. 메모리 적합성과 A6000 관측 성능까지만 주장할 수 있다.</p></div><div><h2>native-gpu-validation</h2><p>실제 대상 카드 실측. 이 라벨만 대상 GPU 성능을 주장할 수 있다.</p></div></div><p class="claim">모든 수치는 A6000 관측값이며 RTX 4090 성능이 아니다.</p><p class="foot">서버 관점 P95 TTFT 302ms · 사용자 체감 6,750ms — 어느 TTFT인지 밝히지 않은 수치는 쓸모가 없다.</p><aside hidden>validator가 A6000 실행을 native-gpu-validation으로 라벨링하는 것을 거부한다.</aside></section>
+<section class="slide"><h1>스캐폴드 결함 — 검증 코드가 주장을 지킨다</h1><p class="lead">인수받은 스캐폴드에서 결함 6건을 찾아 고쳤다.</p><table class="compact"><thead><tr><th>결함</th><th>영향</th></tr></thead><tbody><tr><td>발표된 JSON Schema가 어디에서도 사용되지 않음</td><td>결과 계약이 문서상으로만 존재</td></tr><tr><td>템플릿 생성기가 그 Schema를 위반</td><td>위와 맞물려 아무도 발견 못 함</td></tr><tr><td>native-gpu-validation 라벨 오용 무방비</td><td>정직성 주장 자체가 무방비</td></tr><tr><td>TTFT가 클라이언트 대기시간 제외</td><td>사용자 체감 지연 과소보고</td></tr><tr><td>tokenizer revision 미고정</td><td>프로토콜 요구사항과 불일치</td></tr><tr><td>환경 기록이 타 사용자 프로세스 경로 포함</td><td>스스로 밝힌 비식별 원칙 위반</td></tr></tbody></table><p class="foot">7번째: 판단 근거가 비어 있는데도 검증 통과 — placeholder 접두어 검사로 해결.</p><aside hidden>측정 자동화 스크립트를 만들자 결과 레코드 9개가 판단 근거가 비어 있는데도 검증을 통과하는 7번째 결함이 드러났다. 그 필드가 필수 목록에 없었고, 추가한 뒤에도 placeholder 검사가 정확 일치라 빠져나갔다.</aside></section>
+<section class="slide"><h1>검증 체계</h1><table><thead><tr><th>항목</th><th>규모</th></tr></thead><tbody><tr><td>자동 테스트</td><td class="numeric">84개</td></tr><tr><td>결과 레코드</td><td class="numeric">27개 (전부 schema·게이트 검증 통과)</td></tr><tr><td>ADR</td><td class="numeric">4건 (1건은 오진 기록으로 Superseded 보존)</td></tr><tr><td>합성 corpus</td><td class="numeric">16문서 83조항</td></tr><tr><td>평가셋</td><td class="numeric">60문항</td></tr></tbody></table><p class="claim">평가셋 자신도 corpus·권한·인용·질문 누설 여부를 검증한다.</p><p class="foot">CI 게이트: model revision · synthetic 표시 · 자격증명 패턴 · results/ 전수 검증</p><aside hidden>tests/test_eval_set.py가 질문 안에 정답 문자열이 들어 있지 않은지까지 검사한다. 그 검사가 실제로 결함을 잡았다.</aside></section>
+<section class="slide"><h1>측정 이력 — 검색 설정이 바뀌면 결과도 바뀐다</h1><p class="lead">세 번의 측정을 모두 남겼다. 옛 레코드를 새 값으로 고치지 않는다.</p><table><thead><tr><th>태그</th><th>조건</th><th>retriever</th></tr></thead><tbody><tr><td class="numeric">2026-08-08</td><td>랭킹에 조항 제목 미포함, CUDA graph</td><td class="numeric">0e40e0354b7b</td></tr><tr><td class="numeric">2026-08-08b</td><td>조항 제목 포함, CUDA graph</td><td class="numeric">11d1f8cfeb42</td></tr><tr><td class="numeric">2026-08-08c</td><td>조항 제목 포함, --enforce-eager</td><td class="numeric">11d1f8cfeb42</td></tr></tbody></table><p class="claim">설정이 다르면 결과도 다르다. 옛 레코드를 새 해시로 고치는 것은 측정하지 않은 값을 기록하는 일이다.</p><aside hidden>교차 검토로 랭킹에 조항 제목을 넣자 기대 인용 회수율이 38/40에서 40/40, multi_doc이 8/10에서 10/10으로 올랐다. 검색이 바뀌었으므로 품질을 다시 측정했다.</aside></section>
+<section class="slide"><h1>남은 위험과 다음 단계</h1><ul class="risk-list"><li>--enforce-eager 결정은 Ampere 고유일 수 있다. Ada/Blackwell에서 재검증 필요.</li><li>prompt injection 방어가 없다. 입력 분류기·구조적 분리·출력 필터 조합을 측정해야 한다.</li><li>부하 모델이 버스트다. closed-loop 10 사용자 모델로 재측정 필요.</li><li>corpus가 합성이고 60문항이다. 1.8점 품질 차이를 크게 주장하지 않는다.</li><li>실제 24GB 카드 실측을 하지 않았다. 모든 결과는 memory-budget-emulation 증거다.</li></ul><aside hidden>이 구성은 injection 방어를 추가하기 전까지 배포 가능하지 않다.</aside></section>
+</div>
+</body>
+</html>
