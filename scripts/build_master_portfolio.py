@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build an editable HTML/PPTX portfolio covering all three developer projects."""
+"""Build an editable HTML/PPTX portfolio covering all four developer projects."""
 
 from __future__ import annotations
 
@@ -38,20 +38,21 @@ LINE = "203550"
 SLIDES = [
     {
         "layout": "title",
-        "kicker": "AI DEVELOPER · LLMOPS · INFERENCE ENGINEERING",
+        "kicker": "AI DEVELOPER · LLMOPS · AGENT ENGINEERING",
         "title": "Evidence-Driven\nAI Inference Portfolio",
-        "lead": "김대균 · 운영 가능한 LLM과 한국어 음성 추론을 측정 가능한 시스템으로 구현했습니다.",
-        "chips": ["Production LLMOps", "Quantization Debugging", "Korean ASR Benchmark"],
+        "lead": "김대균 · AI 추론을 만들고, 측정하고, 운영하며, 증거 기반 Agent로 자동화했습니다.",
+        "chips": ["Production LLMOps", "Quantization Debugging", "Korean ASR", "EvidenceOps Agent"],
     },
     {
         "layout": "cards",
         "kicker": "PORTFOLIO MAP",
-        "title": "세 프로젝트가 답하는 질문",
-        "lead": "모델 데모보다 요구사항 → 측정 → 선택 → 운영의 닫힌 고리를 만들었습니다.",
+        "title": "네 프로젝트가 답하는 질문",
+        "lead": "모델 데모보다 요구사항 → 측정 → 선택 → 운영 → 자동화의 닫힌 고리를 만들었습니다.",
         "cards": [
             {"head": "01 FinLLM Lab", "value": "운영", "text": "금융 Private RAG를 단일 GPU에서 어떻게 배포·관측·회귀·롤백할까?", "accent": CYAN},
             {"head": "02 Quantization Autopsy", "value": "원인", "text": "양자화 모델의 성능 저하를 정밀도가 아닌 실행 경로까지 어떻게 분해할까?", "accent": LIME},
             {"head": "03 K-VoiceBench", "value": "평가", "text": "한국어 ASR을 정확도·엔티티·RTF·VRAM의 같은 계약으로 어떻게 비교할까?", "accent": AMBER},
+            {"head": "04 EvidenceOps Agent", "value": "자동화", "text": "긴 AI 실험을 사람이 밤새 지키지 않아도 정책·큐·증거로 어떻게 운영할까?", "accent": CYAN},
         ],
     },
     {
@@ -134,6 +135,33 @@ SLIDES = [
         "callout": "TTS 진단값이며 사람 금융상담 음성 성능은 NOT_EVALUATED",
     },
     {
+        "layout": "flow",
+        "kicker": "PROJECT 04 · EVIDENCEOPS AGENT",
+        "title": "AI 실험 운영을 사람의 밤샘에서 분리",
+        "lead": "허용된 도구만 순차 실행하고 interruption 이후 checkpoint에서 재개합니다.",
+        "flow": ["Discover", "Policy Gate", "Sequential Queue", "Execute", "Observe·Triage", "Evidence Pack"],
+        "metrics": [
+            ["Portfolio jobs", "6 / 6 PASS"], ["Unit tests", "12"],
+            ["GPU policy", "GPU 1 only"], ["LLM action", "Advisory"],
+        ],
+        "callout": "CPU job은 CUDA를 볼 수 없고 GPU job은 물리 GPU 1번 exclusive lock",
+    },
+    {
+        "layout": "table",
+        "kicker": "EVIDENCEOPS · VERIFIED RESULT",
+        "title": "실행보다 중요한 것은 증거와 중단 경계",
+        "lead": "세 프로젝트의 계약을 한 큐에서 검증하고 실행 사건을 SHA-256 hash chain으로 연결했습니다.",
+        "headers": ["항목", "구현 계약", "실측 결과", "Failure boundary"],
+        "rows": [
+            ["Agent run", "10-state machine + checkpoint", "6 / 6 jobs PASS", "완료 job 재실행 금지"],
+            ["Execution", "sequential queue + detach", "14.460s", "interruption 후 resume"],
+            ["Resource", "physical GPU 1 exclusive", "GPU executions 0", "CPU에서 CUDA 비노출"],
+            ["Evidence", "log hash + audit chain", "VERIFIED", "변조 시 chain 검증 실패"],
+            ["Interface", "CLI + MCP v2", "7 tools", "policy 우회 경로 없음"],
+        ],
+        "callout": "NEEDS_ATTENTION은 자동 재시도하지 않으며 사람이 확인 · LLM triage NOT_NEEDED",
+    },
+    {
         "layout": "table",
         "kicker": "ENGINEERING CONTRACTS",
         "title": "재현성을 코드로 강제",
@@ -143,6 +171,7 @@ SLIDES = [
             ["FinLLM Lab", "model·tokenizer revision, ACL corpus", "schema + 11-stage gate", "result JSON · ADR · incident"],
             ["Quantization Autopsy", "18 immutable runs", "3회 반복·provenance", "JSON · CSV · Markdown · HTML"],
             ["K-VoiceBench", "audio manifest·GPU visibility", "WER/CER/entity contract", "result JSON · HTML · CI"],
+            ["EvidenceOps Agent", "experiment spec·argv allowlist", "checkpoint + hash chain", "JSON · HTML · MCP · CI"],
         ],
         "callout": "미실행 항목은 PASS로 바꾸지 않고 NOT_EXECUTED / NOT_EVALUATED로 남김",
     },
@@ -155,6 +184,7 @@ SLIDES = [
             {"head": "Inference", "value": "Runtime", "text": "vLLM·Transformers, single-GPU scheduling, memory budget, TTFT·RTF", "accent": CYAN},
             {"head": "Evaluation", "value": "Evidence", "text": "RAG quality·ACL·injection, WER·CER·entity, immutable provenance", "accent": LIME},
             {"head": "Operations", "value": "Safety", "text": "Docker Compose, metrics·alerts, regression gate, incident·rollback, CI", "accent": AMBER},
+            {"head": "AgentOps", "value": "Automation", "text": "policy gate, state machine, checkpoint·resume, MCP, tamper-evident audit", "accent": CYAN},
         ],
     },
     {
@@ -167,15 +197,16 @@ SLIDES = [
             ["FinLLM Lab v0.2", "153 tests + artifacts PASS", "HTML · PPTX · PDF", "origin/main"],
             ["Quantization Autopsy", "18 runs / 6 configs PASS", "Interactive HTML · report", "FinLLM companion"],
             ["K-VoiceBench", "6 tests + GPU1 result PASS", "Interactive HTML · evidence JSON", "local main"],
+            ["EvidenceOps Agent", "12 tests + 6/6 jobs PASS", "HTML · PPTX · evidence JSON", "local main"],
         ],
-        "callout": "K-VoiceBench는 새 GitHub 저장소 생성 후 원격만 연결하면 되는 상태",
+        "callout": "K-VoiceBench와 EvidenceOps는 나중에 GitHub 저장소를 만든 뒤 원격만 연결하면 되는 상태",
     },
     {
         "layout": "title",
         "kicker": "ONE NARRATIVE",
-        "title": "Build · Measure · Operate",
-        "lead": "금융 LLMOps에서 시작해 양자화 원인 분석과 한국어 음성 추론 평가까지, 제한된 GPU에서 운영 가능한 AI를 만들었습니다.",
-        "chips": ["AI Developer", "LLMOps Engineer", "Inference Engineer"],
+        "title": "Build · Measure · Operate · Automate",
+        "lead": "금융 LLMOps, 양자화 원인 분석, 한국어 음성 평가를 거쳐 제한된 GPU의 AI 실험을 정책과 증거로 자동화했습니다.",
+        "chips": ["AI Developer", "LLMOps Engineer", "Inference Engineer", "Agent Engineer"],
     },
 ]
 
@@ -278,13 +309,22 @@ def render_pptx() -> None:
 
         add_header(slide, data, number)
         if layout == "cards":
-            for index, card in enumerate(data["cards"]):
-                x = .72 + index * 4.03
-                add_rect(slide, x, 2.2, 3.83, 3.55, PANEL_ALT)
-                add_text(slide, x + .23, 2.47, 3.35, .25, card["head"], 10, card["accent"], True)
-                add_text(slide, x + .23, 3.05, 3.35, .52, card["value"], 27, TEXT, True)
-                add_text(slide, x + .23, 3.83, 3.3, 1.18, card["text"], 15, MUTED)
-                add_rect(slide, x + .23, 5.33, 1.0, .05, card["accent"], card["accent"], False)
+            cards = data["cards"]
+            if len(cards) == 4:
+                positions = [(.72, 2.08), (6.77, 2.08), (.72, 4.08), (6.77, 4.08)]
+                card_w, card_h = 5.85, 1.72
+            else:
+                positions = [(.72 + index * 4.03, 2.2) for index in range(len(cards))]
+                card_w, card_h = 3.83, 3.55
+            for card, (x, y) in zip(cards, positions):
+                add_rect(slide, x, y, card_w, card_h, PANEL_ALT)
+                add_text(slide, x + .23, y + .22, card_w - .46, .22, card["head"], 9.5, card["accent"], True)
+                add_text(slide, x + .23, y + .58, 1.5, .34, card["value"], 19 if len(cards) == 4 else 27, TEXT, True)
+                text_x = x + 1.75 if len(cards) == 4 else x + .23
+                text_y = y + .53 if len(cards) == 4 else y + 1.63
+                text_w = card_w - 1.98 if len(cards) == 4 else card_w - .53
+                add_text(slide, text_x, text_y, text_w, .8 if len(cards) == 4 else 1.18, card["text"], 11.5 if len(cards) == 4 else 15, MUTED)
+                add_rect(slide, x + .23, y + card_h - .25, .86, .04, card["accent"], card["accent"], False)
         elif layout == "flow":
             count = len(data["flow"])
             gap = .13
@@ -369,9 +409,9 @@ def render_html() -> None:
             body += f'<header><div class="kicker">{html.escape(data["kicker"])}</div><h2>{html.escape(data["title"])}</h2><p>{html.escape(data.get("lead", ""))}</p></header>'
             layout = data["layout"]
             if layout == "cards":
-                body += '<div class="cards">' + "".join(card_markup(card) for card in data["cards"]) + '</div>'
+                body += f'<div class="cards count-{len(data["cards"])}">' + "".join(card_markup(card) for card in data["cards"]) + '</div>'
             elif layout == "flow":
-                body += '<div class="flow">' + "".join(f'<div>{html.escape(item).replace(chr(10), "<br>")}</div>' for item in data["flow"]) + '</div>'
+                body += f'<div class="flow" style="grid-template-columns:repeat({len(data["flow"])},1fr)">' + "".join(f'<div>{html.escape(item).replace(chr(10), "<br>")}</div>' for item in data["flow"]) + '</div>'
                 body += '<div class="metrics">' + "".join(f'<div><small>{html.escape(label)}</small><strong>{html.escape(value)}</strong></div>' for label, value in data["metrics"]) + '</div>'
             elif layout == "split":
                 left = data["left"]
@@ -388,7 +428,7 @@ def render_html() -> None:
         rendered.append(f'<section class="slide"><div class="slide-no">{number:02d}</div>{body}</section>')
 
     document = f"""<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AI Inference Developer Portfolio</title><style>
-:root{{--bg:#07111f;--panel:#0e1d30;--panel2:#10263a;--text:#f3f7fd;--muted:#9db0c7;--cyan:#38d6ff;--lime:#9af56d;--amber:#ffc857;--line:#203550}}*{{box-sizing:border-box}}body{{margin:0;background:#040a12;color:var(--text);font-family:"Noto Sans KR","Noto Sans",sans-serif}}.deck{{display:grid;gap:28px;justify-content:center;padding:28px}}.slide{{width:1280px;height:720px;padding:42px 68px;background:radial-gradient(circle at 90% 0,#12345a 0,transparent 36%),var(--bg);position:relative;overflow:hidden}}.slide-no{{position:absolute;right:68px;top:40px;color:var(--muted);font:12px monospace}}.kicker{{color:var(--cyan);font-weight:800;letter-spacing:.14em;font-size:12px}}h2{{font-size:40px;letter-spacing:-.04em;margin:12px 0 10px}}header>p{{color:var(--muted);font-size:18px;margin:0 0 26px}}.title-body{{height:100%;display:flex;flex-direction:column;justify-content:center}}.title-body h1{{font-size:72px;line-height:.98;letter-spacing:-.055em;margin:0 0 28px}}.title-body p{{color:var(--muted);font-size:22px;max-width:980px;line-height:1.6}}.chips{{display:flex;gap:12px;margin-top:35px}}.chips span{{border:1px solid var(--line);border-radius:999px;padding:10px 15px;color:var(--lime)}}.cards{{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}}.card,.metrics>div,.side-metrics>div,.focus{{background:linear-gradient(145deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:16px;padding:22px}}.card small,.metrics small,.side-metrics small,.focus small{{color:var(--accent,var(--muted));font-weight:700}}.card strong,.focus strong{{display:block;font-size:30px;margin:25px 0}}.card p,.focus p{{color:var(--muted);font-size:17px;line-height:1.55}}.flow{{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}}.flow div{{background:var(--panel2);border:1px solid var(--line);border-radius:13px;padding:22px 10px;text-align:center;font-weight:700}}.metrics{{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:22px}}.metrics strong,.side-metrics strong{{display:block;color:var(--lime);font:700 24px monospace;margin-top:10px}}.callout{{position:absolute;left:68px;right:68px;bottom:45px;border:1px solid var(--amber);border-radius:12px;padding:13px 18px;color:var(--amber);font-weight:700}}.split{{display:grid;grid-template-columns:1fr 1.2fr;gap:18px}}.split .metrics{{margin:0;grid-template-columns:1fr 1fr}}.bar-layout{{display:grid;grid-template-columns:4fr 1fr;gap:28px}}.bar-row{{display:grid;grid-template-columns:240px 1fr 70px;gap:12px;align-items:center;margin:15px 0;color:var(--muted)}}.bar-row i{{height:17px;background:#050d18;border-radius:999px;overflow:hidden}}.bar-row b{{display:block;height:100%;border-radius:999px}}.bar-row em{{font:normal 13px monospace;color:var(--text)}}.side-metrics{{display:grid;gap:9px}}table{{width:100%;border-collapse:collapse;background:rgba(14,29,48,.8);font-size:15px}}th,td{{padding:13px 14px;border-bottom:1px solid var(--line);text-align:center}}th:first-child,td:first-child{{text-align:left}}th{{color:var(--cyan)}}td:not(:first-child){{font-family:monospace;color:var(--lime)}}@media print{{.deck{{display:block;padding:0}}.slide{{break-after:page}}}}@media(max-width:900px){{.deck{{display:block;padding:0}}.slide{{width:100vw;height:auto;min-height:100vh}}.cards,.metrics,.flow{{grid-template-columns:1fr 1fr}}}}
+:root{{--bg:#07111f;--panel:#0e1d30;--panel2:#10263a;--text:#f3f7fd;--muted:#9db0c7;--cyan:#38d6ff;--lime:#9af56d;--amber:#ffc857;--line:#203550}}*{{box-sizing:border-box}}body{{margin:0;background:#040a12;color:var(--text);font-family:"Noto Sans KR","Noto Sans",sans-serif}}.deck{{display:grid;gap:28px;justify-content:center;padding:28px}}.slide{{width:1280px;height:720px;padding:42px 68px;background:radial-gradient(circle at 90% 0,#12345a 0,transparent 36%),var(--bg);position:relative;overflow:hidden}}.slide-no{{position:absolute;right:68px;top:40px;color:var(--muted);font:12px monospace}}.kicker{{color:var(--cyan);font-weight:800;letter-spacing:.14em;font-size:12px}}h2{{font-size:40px;letter-spacing:-.04em;margin:12px 0 10px}}header>p{{color:var(--muted);font-size:18px;margin:0 0 26px}}.title-body{{height:100%;display:flex;flex-direction:column;justify-content:center}}.title-body h1{{font-size:72px;line-height:.98;letter-spacing:-.055em;margin:0 0 28px}}.title-body p{{color:var(--muted);font-size:22px;max-width:980px;line-height:1.6}}.chips{{display:flex;gap:12px;margin-top:35px}}.chips span{{border:1px solid var(--line);border-radius:999px;padding:10px 15px;color:var(--lime)}}.cards{{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}}.cards.count-4{{grid-template-columns:repeat(2,1fr)}}.card,.metrics>div,.side-metrics>div,.focus{{background:linear-gradient(145deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:16px;padding:22px}}.card small,.metrics small,.side-metrics small,.focus small{{color:var(--accent,var(--muted));font-weight:700}}.card strong,.focus strong{{display:block;font-size:30px;margin:25px 0}}.card p,.focus p{{color:var(--muted);font-size:17px;line-height:1.55}}.flow{{display:grid;gap:10px}}.flow div{{background:var(--panel2);border:1px solid var(--line);border-radius:13px;padding:22px 10px;text-align:center;font-weight:700;min-width:0}}.metrics{{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:22px}}.metrics strong,.side-metrics strong{{display:block;color:var(--lime);font:700 24px monospace;margin-top:10px}}.callout{{position:absolute;left:68px;right:68px;bottom:45px;border:1px solid var(--amber);border-radius:12px;padding:13px 18px;color:var(--amber);font-weight:700}}.split{{display:grid;grid-template-columns:1fr 1.2fr;gap:18px}}.split .metrics{{margin:0;grid-template-columns:1fr 1fr}}.bar-layout{{display:grid;grid-template-columns:4fr 1fr;gap:28px}}.bar-row{{display:grid;grid-template-columns:240px 1fr 70px;gap:12px;align-items:center;margin:15px 0;color:var(--muted)}}.bar-row i{{height:17px;background:#050d18;border-radius:999px;overflow:hidden}}.bar-row b{{display:block;height:100%;border-radius:999px}}.bar-row em{{font:normal 13px monospace;color:var(--text)}}.side-metrics{{display:grid;gap:9px}}table{{width:100%;border-collapse:collapse;background:rgba(14,29,48,.8);font-size:15px}}th,td{{padding:13px 14px;border-bottom:1px solid var(--line);text-align:center}}th:first-child,td:first-child{{text-align:left}}th{{color:var(--cyan)}}td:not(:first-child){{font-family:monospace;color:var(--lime)}}@media print{{.deck{{display:block;padding:0}}.slide{{break-after:page}}}}@media(max-width:900px){{.deck{{display:block;padding:0}}.slide{{width:100vw;height:auto;min-height:100vh}}.cards,.metrics,.flow{{grid-template-columns:1fr 1fr!important}}}}
 </style></head><body><main class="deck">{"".join(rendered)}</main></body></html>"""
     HTML_PATH.write_text(document, encoding="utf-8")
 
@@ -410,7 +450,7 @@ def validate() -> None:
     if FONT not in xml:
         raise ValueError("Noto Sans KR font metadata missing")
     page = HTML_PATH.read_text(encoding="utf-8")
-    for token in ("FinLLM", "Quantization Autopsy", "K-VoiceBench", "NOT_EVALUATED"):
+    for token in ("FinLLM", "Quantization Autopsy", "K-VoiceBench", "EvidenceOps Agent", "NOT_EVALUATED"):
         if token not in page:
             raise ValueError(f"HTML token missing: {token}")
 
