@@ -22,9 +22,10 @@ ROOT = Path(__file__).resolve().parents[1]
 PORTFOLIO = ROOT / "portfolio"
 DATA_PATH = PORTFOLIO / "slide-data.json"
 ARTIFACT = ROOT / "artifacts" / "FinLLM-Lab-v0.2-Developer-Portfolio.pptx"
+HTML_ARTIFACT = ROOT / "artifacts" / "FinLLM-Lab-v0.2-Developer-Portfolio.html"
 PREVIEW_DIR = PORTFOLIO / "assets" / "previews" / "html"
 CONTACT = PORTFOLIO / "assets" / "previews" / "html-contact-sheet.png"
-FONT = "Noto Sans CJK KR"
+FONT = "Noto Sans KR"
 SW, SH = 13.333, 7.5
 
 
@@ -113,8 +114,10 @@ def render(slide, item, theme):
     if layout in {"constraint-grid", "learning-grid", "risk-register"}:
         if c.get("headline"): add_text(slide,c["headline"],.72,1.52,11.9,.42,15,theme["text"])
         values=c.get("cards") or c.get("risks"); start_y=2.0 if c.get("headline") else 1.58
-        h=1.75 if len(values)<=6 else 1.46; gap=.13; w=(11.9-2*gap)/3
-        for i,v in enumerate(values): card(slide,v,.72+(i%3)*(w+gap),start_y+(i//3)*(h+gap),w,h,theme,compact=layout=="risk-register")
+        columns=4 if layout=="learning-grid" else 3
+        h=2.12 if layout=="learning-grid" else (1.75 if len(values)<=6 else 1.46)
+        gap=.13; w=(11.9-(columns-1)*gap)/columns
+        for i,v in enumerate(values): card(slide,v,.72+(i%columns)*(w+gap),start_y+(i//columns)*(h+gap),w,h,theme,compact=layout in {"learning-grid","risk-register"})
         if layout=="risk-register":
             add_shape(slide,.72,6.5,11.9,.38,"#12433E",theme["green"])
             add_text(slide,c["verdict"],.9,6.6,2.5,.18,10,theme["green"],True)
@@ -230,7 +233,7 @@ def render(slide, item, theme):
             if x+width>8.1: x=.95; y+=.42
             add_shape(slide,x,y,width,.31,theme["surface_alt"],theme["line"]); add_text(slide,tag,x,y+.08,width,.14,7,theme["text"],False,PP_ALIGN.CENTER); x+=width+.08
         add_shape(slide,8.65,3.22,3.97,1.7,theme["surface"],theme["line"])
-        add_text(slide,"NEXT",8.9,3.45,1,.2,8,theme["cyan"],True)
+        add_text(slide,c.get("side_label", "NEXT"),8.9,3.45,1.5,.2,8,theme["cyan"],True)
         add_rich_list(slide,c["next"],8.9,3.82,3.35,.72,9,theme["muted"])
         add_text(slide,c["closing"],.9,5.35,11.5,.35,10.5,theme["amber"],True,PP_ALIGN.CENTER)
 
@@ -241,6 +244,16 @@ def build_pptx(data):
     for item in data["slides"]:
         render(prs.slides.add_slide(blank),item,data["theme"])
     ARTIFACT.parent.mkdir(parents=True,exist_ok=True); prs.save(ARTIFACT)
+
+
+def build_standalone_html(data):
+    html=(PORTFOLIO / "index.html").read_text(encoding="utf-8")
+    css=(PORTFOLIO / "styles.css").read_text(encoding="utf-8")
+    payload=json.dumps(data,ensure_ascii=False,separators=(",", ":")).replace("</", "<\\/")
+    html=html.replace('<link rel="stylesheet" href="styles.css">', f"<style>\n{css}\n</style>")
+    html=html.replace("</head>", f'<script>window.__FINLLM_DATA__={payload};</script>\n</head>')
+    HTML_ARTIFACT.parent.mkdir(parents=True,exist_ok=True)
+    HTML_ARTIFACT.write_text(html,encoding="utf-8")
 
 
 class QuietHandler(SimpleHTTPRequestHandler):
@@ -274,7 +287,8 @@ def build_html_previews(slide_count: int):
 def main() -> int:
     data=json.loads(DATA_PATH.read_text(encoding="utf-8"))
     if data["deck"]["aspect_ratio"]!="16:9": raise SystemExit("deck must be 16:9")
-    build_pptx(data); build_html_previews(len(data["slides"]))
+    build_standalone_html(data); build_pptx(data); build_html_previews(len(data["slides"]))
+    print(f"HTML: {HTML_ARTIFACT} ({HTML_ARTIFACT.stat().st_size} bytes)")
     print(f"PPTX: {ARTIFACT} ({len(data['slides'])} editable slides, {ARTIFACT.stat().st_size} bytes)")
     print(f"HTML previews: {CONTACT}")
     return 0

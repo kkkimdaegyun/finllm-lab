@@ -1,6 +1,14 @@
 # FinLLM Lab v0.2 Developer Portfolio
 
-HTML과 PPTX는 `slide-data.json`을 공통 source로 사용한다.
+HTML과 PPTX는 `slide-data.json`을 공통 source로 사용한다. 모든 본문과 도형은
+PowerPoint에서 직접 수정할 수 있으며, HTML과 PPTX 모두 `Noto Sans KR`을 사용한다.
+
+## 직접 수정하는 순서
+
+1. 문장·수치·순서를 `portfolio/slide-data.json`에서 바꾼다.
+2. 아래 Preview 명령으로 HTML을 보면서 확인한다.
+3. `python3 scripts/build_portfolio.py`로 editable PPTX를 다시 만든다.
+4. PowerPoint 또는 LibreOffice에서 문장과 도형을 직접 미세 조정한다.
 
 ## Preview
 
@@ -18,6 +26,7 @@ python3 scripts/build_portfolio.py
 
 결과:
 
+- `artifacts/FinLLM-Lab-v0.2-Developer-Portfolio.html` (서버 없이 바로 열 수 있는 단일 HTML)
 - `artifacts/FinLLM-Lab-v0.2-Developer-Portfolio.pptx`
 - `portfolio/assets/previews/html/slide-*.png`
 - `portfolio/assets/previews/html-contact-sheet.png`

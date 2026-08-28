@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>김대균 · FinLLM Lab v0.2 · Developer Portfolio</title>
+  <style>
+@font-face { font-family: "NotoPortfolio"; src: local("Noto Sans KR"); }
+:root { --bg:#07111F; --surface:#102038; --surface-alt:#142B49; --text:#F5F8FC; --muted:#A4B5CA; --cyan:#39D6C1; --amber:#F6BA57; --green:#6EE7A8; --line:#2B4565; }
+* { box-sizing: border-box; }
+html, body { margin:0; background:#030912; color:var(--text); font-family:var(--portfolio-font,"NotoPortfolio"),"NotoPortfolio","Noto Sans KR",sans-serif; }
+body { padding:32px; }
+#deck { display:flex; flex-direction:column; align-items:center; gap:32px; }
+.slide { width:1280px; height:720px; position:relative; overflow:hidden; padding:50px 62px 42px; background:radial-gradient(circle at 90% 0%,#123657 0,transparent 34%),var(--bg); box-shadow:0 18px 60px #0009; display:grid; grid-template-rows:112px 1fr 32px; }
+.slide::before { content:""; position:absolute; top:0; left:0; width:10px; height:100%; background:var(--cyan); }
+header { position:relative; border-bottom:1px solid var(--line); }
+header>span { color:var(--cyan); letter-spacing:.16em; font-size:15px; font-weight:800; }
+header>em { position:absolute; right:0; top:-8px; color:#53708f; font-style:normal; font-size:28px; font-weight:800; }
+h1 { margin:12px 70px 0 0; font-size:36px; line-height:1.2; letter-spacing:-.035em; }
+.content { padding:24px 0 18px; min-height:0; }
+footer { display:flex; justify-content:space-between; align-items:flex-end; border-top:1px solid var(--line); color:var(--muted); font-size:13px; padding-top:10px; white-space:nowrap; }
+footer small { max-width:56%; overflow:hidden; text-overflow:ellipsis; }
+.lead { margin:0 0 20px; font-size:24px; color:#dce9f7; }
+.cards { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+.learning-grid .cards { grid-template-columns:repeat(4,1fr); }
+.learning-grid .card { min-height:198px; }
+.card { min-height:142px; padding:17px 18px; background:linear-gradient(140deg,var(--surface),var(--surface-alt)); border:1px solid var(--line); border-radius:11px; }
+.card>span,.steps article>span,.evolution section>span,.lanes section>span { color:var(--cyan); font-size:12px; font-weight:900; letter-spacing:.12em; }
+.card h3 { margin:9px 0 6px; font-size:20px; }
+.card p { margin:0; color:var(--muted); font-size:15px; line-height:1.45; }
+.card small { display:block; margin-top:8px; color:var(--amber); font-size:12px; }
+blockquote { margin:5px auto 25px; padding:26px 36px; border-left:5px solid var(--cyan); background:var(--surface); border-radius:0 12px 12px 0; font-size:31px; line-height:1.45; font-weight:700; }
+.criteria { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+.criteria article { padding:14px 16px; background:var(--surface-alt); border:1px solid var(--line); border-radius:9px; }
+.criteria b,.criteria span { display:block; }
+.criteria b { color:var(--cyan); font-size:17px; }
+.criteria span { margin-top:4px; color:var(--muted); font-size:14px; }
+.rule,.status-line { text-align:center; margin:18px 0 0; color:var(--amber); font-weight:700; font-size:17px; }
+.flow { display:flex; align-items:center; gap:10px; margin:12px 0 28px; }
+.flow article { flex:1; min-height:88px; display:flex; flex-direction:column; justify-content:center; text-align:center; border:1px solid var(--cyan); background:var(--surface); border-radius:10px; padding:12px; }
+.flow b { font-size:19px; }
+.flow span { color:var(--muted); font-size:13px; margin-top:6px; }
+.flow i,.steps i,.evolution>i,.loop i { color:var(--cyan); font-style:normal; font-size:25px; }
+.rails { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+.rails section { padding:15px 20px; background:var(--surface-alt); border-radius:10px; }
+.rails b { color:var(--amber); }
+.rails ul { display:flex; gap:24px; margin:10px 0 0; padding-left:18px; color:var(--muted); }
+table { width:100%; border-collapse:collapse; font-size:16px; overflow:hidden; border-radius:10px; }
+th { background:#17395b; color:var(--cyan); text-align:right; padding:13px 12px; }
+th:first-child,td:first-child { text-align:left; }
+td { background:var(--surface); border-top:1px solid var(--line); padding:15px 12px; text-align:right; }
+tr.highlight td { background:#14413f; color:#fff; font-weight:700; }
+.note { color:var(--muted); font-size:14px; margin:12px 0 0; }
+.decision { padding:13px 16px; margin:13px 0 0; background:#15324b; border-left:4px solid var(--amber); border-radius:0 8px 8px 0; font-size:16px; }
+.steps { display:flex; align-items:stretch; gap:9px; }
+.steps article { flex:1; padding:15px; background:var(--surface); border:1px solid var(--line); border-radius:10px; }
+.steps h3 { margin:9px 0; font-size:18px; }
+.steps article>b { display:block; color:var(--amber); font-size:21px; }
+.steps p { color:var(--muted); margin:8px 0 0; font-size:14px; }
+.content .evolution { display:grid; grid-template-columns:1fr 55px 1fr; align-items:center; }
+.content .evolution>i { text-align:center; font-size:38px; }
+.content .evolution section { padding:16px 24px; background:var(--surface); border:1px solid var(--line); border-radius:10px; }
+.content .evolution h2 { margin:7px 0; font-size:24px; }
+.content .evolution ul { columns:2; color:var(--muted); margin:8px 0; }
+.verification { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:16px; }
+.verification article { display:grid; grid-template-columns:auto 1fr; gap:4px 10px; padding:13px; background:var(--surface-alt); border-radius:9px; }
+.verification .ok { color:var(--green); font-size:12px; font-weight:900; }
+.verification strong { grid-column:2; color:var(--cyan); }
+.verification small { grid-column:1/3; color:var(--muted); }
+.content .timeline { display:grid; grid-template-columns:repeat(6,1fr); gap:8px; }
+.content .timeline article { position:relative; min-height:170px; padding:15px 13px; background:var(--surface); border-top:4px solid var(--cyan); border-radius:8px; }
+.content .timeline article>span { color:var(--cyan); font-size:11px; font-weight:900; }
+.content .timeline h3 { font-size:16px; margin:10px 0; }
+.content .timeline b { color:var(--amber); font-size:19px; }
+.content .timeline p { color:var(--muted); font-size:13px; }
+.lanes { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.lanes section { padding:16px 22px; border:1px solid var(--line); background:var(--surface); border-radius:10px; }
+.lanes h3 { margin:6px 0; }
+.lanes ul { display:flex; gap:25px; color:var(--muted); }
+.loop { display:flex; align-items:center; justify-content:center; gap:12px; margin:17px 0; }
+.loop b { padding:8px 10px; background:#173b50; border-radius:7px; font-size:13px; }
+.findings { display:grid; grid-template-columns:1fr 1fr; align-items:center; gap:20px; }
+.findings ul { margin:0; color:var(--muted); columns:2; }
+.findings strong { color:var(--amber); text-align:center; }
+.risk-register .cards { grid-template-columns:repeat(3,1fr); }
+.risk-register .card { min-height:120px; }
+.verdict-inline { margin-top:15px; display:flex; gap:20px; align-items:center; padding:12px 18px; background:#12433e; border:1px solid var(--green); border-radius:9px; }
+.verdict-inline b { color:var(--green); font-size:19px; }
+.verdict-inline span { color:#dce8f2; font-size:14px; }
+.cover { grid-template-rows:112px 1fr 32px; }
+.cover-copy { max-width:850px; padding-top:32px; }
+.cover-copy h2 { margin:0; font-size:48px; line-height:1.25; letter-spacing:-.04em; }
+.cover-copy p { color:var(--muted); font-size:21px; margin:22px 0; }
+.tags { display:flex; flex-wrap:wrap; gap:8px; }
+.tags span { padding:7px 12px; border:1px solid var(--line); background:var(--surface); color:#d9e9f8; border-radius:999px; font-size:13px; }
+.verdict { position:absolute; right:62px; bottom:105px; width:300px; padding:19px; border:1px solid var(--green); background:#12352f; border-radius:11px; }
+.verdict b,.verdict small { display:block; }
+.verdict b { color:var(--green); font-size:20px; }
+.verdict small { margin-top:8px; color:#cfe5dd; line-height:1.4; }
+.pitch { font-size:23px; margin:0 0 20px; }
+.summary-grid { display:grid; grid-template-columns:2fr 1fr; gap:20px; }
+.summary-grid section { padding:16px; background:var(--surface); border-radius:10px; }
+.summary-grid section>b { color:var(--cyan); font-size:13px; letter-spacing:.12em; }
+.summary-grid ul { color:var(--muted); margin-bottom:0; }
+.closing { text-align:center; color:var(--amber); font-weight:700; margin-top:15px; }
+body.single { padding:0; overflow:hidden; }
+body.single #deck { gap:0; }
+body.single .slide { box-shadow:none; }
+@page { size:13.333in 7.5in; margin:0; }
+@media print { body { padding:0; } #deck { gap:0; } .slide { break-after:page; box-shadow:none; } }
+
+</style>
+<script>window.__FINLLM_DATA__={"schema_version":"2.0.0","deck":{"title":"FinLLM Lab v0.2 — Production LLMOps","subtitle":"김대균 · AI / LLMOps Developer Portfolio","language":"ko-KR","aspect_ratio":"16:9","release_verdict":"PASS","release_source_commit":"95dd24deba5669919e12b8535dbaf3128646ae5e","evidence_boundary":"운영 rehearsal은 actual RTX A6000; 24GB 적합성 수치는 A6000 memory-budget-emulation이며 native 24GB 검증은 NOT_EXECUTED"},"theme":{"background":"#07111F","surface":"#102038","surface_alt":"#142B49","text":"#F5F8FC","muted":"#A4B5CA","cyan":"#39D6C1","amber":"#F6BA57","red":"#FF7777","green":"#6EE7A8","line":"#2B4565","font":"Noto Sans KR"},"slides":[{"number":1,"eyebrow":"KIM DAEGYUN · AI / LLMOPS DEVELOPER","title":"FinLLM Lab v0.2","layout":"cover","content":{"headline":"모델 실험을\n운영 가능한 LLM 서비스로","subheadline":"금융 Private RAG · single GPU · evidence-driven engineering","tags":["Python","vLLM","Docker","Prometheus","GitHub Actions"],"verdict":"PRODUCTION LLMOPS · PASS","verdict_note":"actual RTX A6000 통합 rehearsal · 11/11 regression stages"},"footer":"github.com/kkkimdaegyun/finllm-lab · 2026","evidence":["docs/final-review/final-release-review.json"]},{"number":2,"eyebrow":"01 · DEVELOPER SCOPE","title":"실험 코드에서 운영·복구까지 하나의 제품 경계로 구현했다","layout":"constraint-grid","content":{"headline":"내 역할은 모델 호출 데모가 아니라, 실패를 탐지하고 안전하게 되돌릴 수 있는 LLM 서비스 구축이었다.","cards":[{"label":"SERVICE","title":"API lifecycle","text":"health · readiness · metrics · RAG endpoint · graceful drain"},{"label":"DEPLOY","title":"Pinned runtime","text":"API/vLLM image · Compose · non-root · read-only filesystem"},{"label":"EVALUATION","title":"Reproducible evidence","text":"60 cases · result schema · immutable revisions · n=3"},{"label":"OBSERVE","title":"Production signals","text":"Prometheus · Grafana · DCGM · 10 alert rules"},{"label":"CHANGE SAFETY","title":"Fail-closed gate","text":"stale · skipped · crashed evaluation을 PASS로 처리하지 않음"},{"label":"RECOVERY","title":"Incident & rollback","text":"immutable target · restart · readiness · state commit"}]},"footer":"Python 9,807 LOC · 17 test modules · 153 deterministic tests","evidence":["service/ · deploy/ · monitoring/ · ops/ · tests/"]},{"number":3,"eyebrow":"02 · PRODUCT QUESTION","title":"금융 RAG는 정확도 하나만으로 운영 구성을 고를 수 없다","layout":"question","content":{"quote":"외부 API 없이, single GPU에서, 권한을 지키며 동시에 응답할 수 있는가?","criteria":[{"name":"Quality","detail":"correctness · grounding · citation · abstention"},{"name":"Latency","detail":"P95 user TTFT ≤ 2,000ms"},{"name":"Throughput","detail":"concurrency 10 · 30 requests · n=3"},{"name":"Memory","detail":"budget ≠ process peak ≠ native fit"},{"name":"Security","detail":"retrieval ACL violation = 0"},{"name":"Reproducibility","detail":"model · prompt · eval · retriever provenance"}],"rule":"추정은 후보 선정에만 사용하고, 최종 판정은 test · schema · actual run으로 제한"},"footer":"Scenario · 은행 내부통제·준법감시용 on-premise Private RAG","evidence":["docs/project-brief.md · configs/profiles.json"]},{"number":4,"eyebrow":"03 · SYSTEM ARCHITECTURE","title":"요청 경로와 운영 제어면을 분리하고 같은 증거 체계로 연결했다","layout":"architecture","content":{"flow":[{"name":"Client","detail":"private network"},{"name":"FinLLM API","detail":"/health · /ready · /metrics"},{"name":"ACL Retriever","detail":"filter before search"},{"name":"vLLM","detail":"OpenAI-compatible API"},{"name":"RTX A6000","detail":"single GPU · 48GiB"}],"ops":["Prometheus + Grafana","DCGM GPU metrics","10 alert rules","incident runbook"],"safety":["153 tests","27 result records","11-stage gate","immutable rollback"],"status":"actual rehearsal: API · vLLM · DCGM · Prometheus targets 4/4 up"},"footer":"Docker Compose · external finllm-net · pinned API/vLLM images","evidence":["deploy/compose.yaml · monitoring/prometheus/prometheus.yml"]},{"number":5,"eyebrow":"04 · CODE OWNERSHIP MAP","title":"폴더 구조가 곧 책임 경계와 검증 지점이다","layout":"learning-grid","content":{"cards":[{"label":"service/app.py","title":"HTTP contract","text":"health · ready · metrics · RAG 요청/응답"},{"label":"service/runtime.py","title":"Runtime state","text":"startup validation · admission · failure latch · drain"},{"label":"service/inference.py","title":"Inference adapter","text":"vLLM 호출 · streaming · model provenance"},{"label":"scripts/rag_eval.py","title":"Evaluation","text":"60문항 deterministic scoring · ACL · injection"},{"label":"scripts/regression_gate.py","title":"Release gate","text":"CPU/GPU 11 stages · stale/skip/crash fail closed"},{"label":"deploy/","title":"Deployment","text":"digest-pinned containers · Compose · validation scripts"},{"label":"monitoring/","title":"Observability","text":"metrics contract · dashboard · PromQL alert rules"},{"label":"ops/","title":"Operations","text":"release manifest · incidents · evidence · rollback"}]},"footer":"구현 주장보다 source path와 회귀 테스트를 먼저 제시","evidence":["service/ · scripts/ · deploy/ · monitoring/ · ops/"]},{"number":6,"eyebrow":"05 · QUANTIZATION DECISION","title":"14B AWQ eager를 다음 native 검증 후보로 선택했다","layout":"data-table","content":{"table":{"headers":["구성","Quality","server P95","user P95","tok/s","Peak","@8192"],"rows":[["8B BF16 · 0.50","95.926","77.329ms","1,344.653ms","286.955","24.006GiB","7.31"],["14B AWQ · 0.50","97.667","129.828ms","1,310.587ms","313.238","23.836GiB","11.05"],["14B AWQ · 0.46","97.667","129.995ms","1,273.402ms","315.331","21.961GiB","9.53"]],"highlight_row":2},"note":"RTX A6000 · memory-budget-emulation · concurrency 10 · 30 requests · n=3","decision":"같은 host/workload에서 14B AWQ가 quality와 memory observation에 유리했다. 실제 24GB native fit은 NOT_EXECUTED."},"footer":"A6000 관측값을 RTX 4090/5090 실측으로 재표기하지 않음","evidence":["results/2026-08-08c-* · decisions/0004-profile-a-model-revised.md"]},{"number":7,"eyebrow":"06 · DEBUGGING STORY","title":"“AWQ라서 느리다”는 초기 해석을 통제 실험으로 수정했다","layout":"autopsy","content":{"steps":[{"label":"OBSERVE","title":"graph-enabled AWQ","metric":"≈57.2 tok/s","text":"8B BF16보다 크게 느림"},{"label":"HYPOTHESIS","title":"초기 의심","metric":"dequant?","text":"weight format을 원인으로 판단"},{"label":"CONTROL","title":"변수 하나 변경","metric":"--enforce-eager","text":"model · revision · eval 고정"},{"label":"EVIDENCE","title":"eager AWQ · n=3","metric":"313.238 tok/s","text":"저성능 현상 소멸"}],"corrected":"수정된 결론: 저성능은 이 환경의 graph-enabled path와 함께 나타났다. 정확한 kernel root cause는 NOT_MEASURED.","principle":"예상과 다른 결과를 설명으로 덮지 않고, 반증 가능한 변수로 다시 측정"},"footer":"Unexpected result → controlled experiment → bounded conclusion","evidence":["decisions/0004-profile-a-model-revised.md · results/2026-08-08b/08c"]},{"number":8,"eyebrow":"07 · SERVICE RELIABILITY","title":"정상 경로보다 실패 경로를 먼저 계약했다","layout":"question","content":{"quote":"서비스가 살아 있다는 것과 요청을 받아도 된다는 것은 다른 상태다.","criteria":[{"name":"/health","detail":"API process liveness만 반환"},{"name":"/ready","detail":"retriever · inference · model · admission"},{"name":"Startup","detail":"revision/config 불일치 시 exit 2"},{"name":"Drain","detail":"새 요청 503 · accepted body는 완료"},{"name":"Failure latch","detail":"generation 실패 후 readiness 차단"},{"name":"No fallback","detail":"silent model/prompt fallback 금지"}],"rule":"failure · stale output · skipped stage · restart mismatch를 모두 non-zero로 차단"},"footer":"API contract와 negative-path 테스트를 같은 변경에 포함","evidence":["tests/test_service_*.py · tests/test_regression_gate.py"]},{"number":9,"eyebrow":"08 · INCIDENT & ROLLBACK","title":"API 중단을 탐지하고 immutable image로 복구했다","layout":"timeline","content":{"timeline":[{"time":"BASELINE","title":"4 targets up","value":"ready=200","detail":"API · vLLM · DCGM · Prometheus"},{"time":"DRAIN","title":"SIGTERM","value":"20 / 20","detail":"in-flight response body 완주"},{"time":"ALERT","title":"GatewayDown","value":"43.765s","detail":"Prometheus state=firing"},{"time":"FAIL CLOSED","title":"SHA mismatch","value":"state 유지","detail":"잘못된 rollback 차단"},{"time":"ROLLBACK","title":"known-good","value":"6.332s","detail":"digest restart + verify"},{"time":"RECOVER","title":"ready + build","value":"VERIFY OK","detail":"active alert 없음"}],"lesson":"graceful drain, symptom alert, immutable provenance, readiness verification을 한 incident에서 연결했다.","caveat":"의도적 loopback 실험이며 실제 고객 downtime은 NOT_MEASURED."},"footer":"INC-003 · intentional experiment · actual RTX A6000","evidence":["ops/incidents/INC-003-api-outage-container-rollback.md"]},{"number":10,"eyebrow":"09 · RELEASE ENGINEERING","title":"실행되지 않은 검증이 PASS로 보이지 않도록 gate를 닫았다","layout":"evolution","content":{"before":{"label":"CHANGE INPUTS","title":"변경 가능한 요소","items":["service / deployment code","model · tokenizer revision","prompt · retriever","evaluation dataset","monitoring / rollback policy"]},"after":{"label":"FAIL-CLOSED GATES","title":"release 판정 조건","items":["deterministic tests","result schema validation","CPU/GPU live evaluation","ACL / injection regression","manifest / readiness verify"]},"verification":[{"name":"Deterministic suite","value":"153 tests","status":"PASS","note":"GPU opt-in 3개는 actual run 별도 PASS"},{"name":"Result contract","value":"27 / 27","status":"PASS","note":"schema · provenance · evidence type"},{"name":"Regression gate","value":"11 / 11","status":"PASS","note":"60 cases · failed 0 · skipped 0"}]},"footer":"GitHub Actions CPU gate + self-hosted A6000 GPU gate contract","evidence":[".github/workflows/ci.yml · scripts/regression_gate.py"]},{"number":11,"eyebrow":"10 · EVIDENCE BOUNDARY","title":"완료 범위와 아직 주장할 수 없는 것을 분리했다","layout":"risk-register","content":{"risks":[{"severity":"KNOWN","title":"Prompt injection","status":"1 / 5 success","next":"방어 실험과 별도 threshold 검증"},{"severity":"PENDING","title":"Alert windows","status":"PENDING_THRESHOLD_VALIDATION","next":"대표 traffic 분포로 재측정"},{"severity":"PENDING","title":"Native 24GB GPU","status":"NOT_EXECUTED","next":"동일 revision/config native validation"},{"severity":"SCOPE","title":"High availability","status":"single-host only","next":"현재 프로젝트 범위 밖"},{"severity":"SCOPE","title":"Production corpus","status":"synthetic 16 docs","next":"보안 승인된 별도 평가"},{"severity":"PENDING","title":"Remote GPU CI","status":"NOT_EXECUTED","next":"self-hosted runner 연결"}],"verdict":"PASS · v0.2 single-A6000 scope","note":"통합 운영 rehearsal 통과는 native 24GB 또는 실제 고객 traffic 검증을 의미하지 않는다."},"footer":"검증하지 않은 범위를 숨기지 않는 것도 production engineering","evidence":["docs/final-review/final-release-review.json"]},{"number":12,"eyebrow":"11 · DEVELOPER SUMMARY","title":"모델 비교를 운영 가능한 증거 체계까지 확장했다","layout":"summary","content":{"pitch":"금융 RAG에서 품질·TTFT·처리량·VRAM·ACL을 같은 provenance로 비교했습니다. 이어 pinned Compose·readiness·Prometheus·회귀 gate·incident·immutable rollback을 실제 A6000에서 검증했습니다.","stack":["Python","PyTorch","vLLM 0.9.2","Qwen3","AWQ","Docker Compose","Prometheus","Grafana","DCGM","GitHub Actions"],"side_label":"ROLE FIT","next":["LLMOps Engineer","AI Backend Engineer","Inference Engineer"],"closing":"GitHub · github.com/kkkimdaegyun/finllm-lab"},"footer":"Interview evidence map · docs/final-report/resume-interview-summary.md","evidence":["docs/final-report/resume-interview-summary.md"]}]};</script>
+</head>
+<body>
+  <main id="deck" aria-live="polite"></main>
+  <script>
+    const esc = value => String(value ?? "").replace(/[&<>\"]/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
+    const items = values => `<ul>${values.map(v => `<li>${esc(v)}</li>`).join("")}</ul>`;
+    const cards = values => `<div class="cards">${values.map(v => `<article class="card"><span>${esc(v.label || v.severity || "")}</span><h3>${esc(v.title)}</h3><p>${esc(v.text || v.status || "")}</p>${v.next ? `<small>Next · ${esc(v.next)}</small>` : ""}</article>`).join("")}</div>`;
+
+    function renderContent(slide) {
+      const c = slide.content;
+      if (slide.layout === "cover") return `
+        <div class="cover-copy"><h2>${esc(c.headline).replace(/\n/g,"<br>")}</h2><p>${esc(c.subheadline)}</p>
+        <div class="tags">${c.tags.map(t => `<span>${esc(t)}</span>`).join("")}</div></div>
+        <aside class="verdict pass"><b>${esc(c.verdict)}</b><small>${esc(c.verdict_note)}</small></aside>`;
+      if (slide.layout === "constraint-grid") return `<p class="lead">${esc(c.headline)}</p>${cards(c.cards)}`;
+      if (slide.layout === "question") return `<blockquote>${esc(c.quote)}</blockquote><div class="criteria">${c.criteria.map(v => `<article><b>${esc(v.name)}</b><span>${esc(v.detail)}</span></article>`).join("")}</div><p class="rule">${esc(c.rule)}</p>`;
+      if (slide.layout === "architecture") return `<div class="flow">${c.flow.map((v,i) => `${i?'<i>→</i>':''}<article><b>${esc(v.name)}</b><span>${esc(v.detail)}</span></article>`).join("")}</div><div class="rails"><section><b>OBSERVE</b>${items(c.ops)}</section><section><b>CHANGE SAFETY</b>${items(c.safety)}</section></div><p class="status-line">${esc(c.status)}</p>`;
+      if (slide.layout === "data-table") return `<table><thead><tr>${c.table.headers.map(v=>`<th>${esc(v)}</th>`).join("")}</tr></thead><tbody>${c.table.rows.map((row,i)=>`<tr class="${i===c.table.highlight_row?'highlight':''}">${row.map(v=>`<td>${esc(v)}</td>`).join("")}</tr>`).join("")}</tbody></table><p class="note">${esc(c.note)}</p><p class="decision">${esc(c.decision)}</p>`;
+      if (slide.layout === "autopsy") return `<div class="steps">${c.steps.map((v,i)=>`${i?'<i>→</i>':''}<article><span>${esc(v.label)}</span><h3>${esc(v.title)}</h3><b>${esc(v.metric)}</b><p>${esc(v.text)}</p></article>`).join("")}</div><p class="decision">${esc(c.corrected)}</p><p class="rule">${esc(c.principle)}</p>`;
+      if (slide.layout === "evolution") return `<div class="evolution"><section><span>${esc(c.before.label)}</span><h2>${esc(c.before.title)}</h2>${items(c.before.items)}</section><i>→</i><section><span>${esc(c.after.label)}</span><h2>${esc(c.after.title)}</h2>${items(c.after.items)}</section></div><div class="verification">${c.verification.map(v=>`<article><span class="ok">${esc(v.status)}</span><b>${esc(v.name)}</b><strong>${esc(v.value)}</strong><small>${esc(v.note)}</small></article>`).join("")}</div>`;
+      if (slide.layout === "timeline") return `<div class="timeline">${c.timeline.map(v=>`<article><span>${esc(v.time)}</span><h3>${esc(v.title)}</h3><b>${esc(v.value)}</b><p>${esc(v.detail)}</p></article>`).join("")}</div><p class="decision">${esc(c.lesson)}</p><p class="note">${esc(c.caveat)}</p>`;
+      if (slide.layout === "review-loop") return `<div class="lanes">${c.lanes.map(v=>`<section><span>${esc(v.owner)}</span><h3>${esc(v.scope)}</h3>${items(v.outputs)}</section>`).join("")}</div><div class="loop">${c.loop.map((v,i)=>`${i?'<i>→</i>':''}<b>${esc(v)}</b>`).join("")}</div><div class="findings">${items(c.findings)}<strong>${esc(c.judge)}</strong></div>`;
+      if (slide.layout === "learning-grid") return cards(c.cards);
+      if (slide.layout === "risk-register") return `${cards(c.risks)}<div class="verdict-inline"><b>${esc(c.verdict)}</b><span>${esc(c.note)}</span></div>`;
+      if (slide.layout === "summary") return `<blockquote class="pitch">${esc(c.pitch)}</blockquote><div class="summary-grid"><section><b>CORE STACK</b><div class="tags">${c.stack.map(v=>`<span>${esc(v)}</span>`).join("")}</div></section><section><b>${esc(c.side_label || "NEXT")}</b>${items(c.next)}</section></div><p class="closing">${esc(c.closing)}</p>`;
+      return `<pre>${esc(JSON.stringify(c,null,2))}</pre>`;
+    }
+
+    const deckData = window.__FINLLM_DATA__
+      ? Promise.resolve(window.__FINLLM_DATA__)
+      : fetch("slide-data.json").then(r => r.json());
+
+    deckData.then(data => {
+      const selected = Number(new URLSearchParams(location.search).get("slide") || 0);
+      const slides = selected ? data.slides.filter(s => s.number === selected) : data.slides;
+      document.documentElement.style.setProperty("--bg", data.theme.background);
+      document.documentElement.style.setProperty("--surface", data.theme.surface);
+      document.documentElement.style.setProperty("--surface-alt", data.theme.surface_alt);
+      document.documentElement.style.setProperty("--text", data.theme.text);
+      document.documentElement.style.setProperty("--muted", data.theme.muted);
+      document.documentElement.style.setProperty("--cyan", data.theme.cyan);
+      document.documentElement.style.setProperty("--amber", data.theme.amber);
+      document.documentElement.style.setProperty("--green", data.theme.green);
+      document.documentElement.style.setProperty("--line", data.theme.line);
+      document.documentElement.style.setProperty("--portfolio-font", `"${data.theme.font}"`);
+      document.getElementById("deck").innerHTML = slides.map(slide => `<section class="slide ${esc(slide.layout)}">
+        <header><span>${esc(slide.eyebrow)}</span><em>${String(slide.number).padStart(2,"0")}</em><h1>${esc(slide.title)}</h1></header>
+        <div class="content">${renderContent(slide)}</div>
+        <footer><span>${esc(slide.footer)}</span><small>EVIDENCE · ${esc(slide.evidence[0])}</small></footer>
+      </section>`).join("");
+      document.body.classList.toggle("single", Boolean(selected));
+      document.fonts.ready.then(() => { window.__FINLLM_READY__ = true; });
+    }).catch(error => { document.getElementById("deck").textContent = error.stack; });
+  </script>
+</body>
+</html>
