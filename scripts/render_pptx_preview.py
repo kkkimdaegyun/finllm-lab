@@ -9,7 +9,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-import fitz
+import pymupdf
 from PIL import Image, ImageDraw
 
 
@@ -31,10 +31,10 @@ def main() -> int:
          "--convert-to", "pdf", "--outdir", str(OUT), str(PPTX)],
         check=True,
     )
-    document = fitz.open(PDF)
+    document = pymupdf.open(PDF)
     thumbs=[]
     for index,page in enumerate(document):
-        pix=page.get_pixmap(matrix=fitz.Matrix(1.25,1.25),alpha=False)
+        pix=page.get_pixmap(matrix=pymupdf.Matrix(1.25,1.25),alpha=False)
         target=OUT/f"slide-{index+1:02d}.png"; pix.save(target)
         image=Image.open(target).convert("RGB"); image.thumbnail((384,216)); thumbs.append(image.copy())
     document.close()

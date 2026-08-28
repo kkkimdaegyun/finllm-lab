@@ -1,0 +1,7 @@
+variant,model_id,parameter_billions,quantization,memory_budget_mode,gpu_memory_utilization,execution_mode,repeats,model_weights_gib,kv_cache_gib,cuda_graphs_gib,max_concurrency,quality_score,quality_score_stdev,p95_ttft_ms,p95_ttft_ms_stdev,p95_user_ttft_ms,p95_user_ttft_ms_stdev,aggregate_output_tokens_per_s,aggregate_output_tokens_per_s_stdev,peak_vram_gib,peak_vram_gib_stdev
+8B BF16 · class ceiling · cuda graph,Qwen/Qwen3-8B,8.2,none,class-ceiling,0.5,cuda_graph,3,15.2683,8.23,2.2,7.31,95.259,0.0,74.752,0.5158,1345.1443,6.1169,295.979,0.5882,26.137,0.0
+8B BF16 · class ceiling · eager,Qwen/Qwen3-8B,8.2,none,class-ceiling,0.5,eager,3,15.2683,8.23,,7.31,95.926,0.0,77.3293,3.0016,1344.6533,5.9097,286.9547,2.5626,24.006,0.0
+15B AWQ 4-bit · class ceiling · cuda graph,Qwen/Qwen3-14B-AWQ,14.8,awq,class-ceiling,0.5,cuda_graph,3,9.3666,13.79,3.51,11.03,98.333,0.0,301.9883,0.4115,6740.576,7.9721,57.2117,0.0641,27.545,0.0
+15B AWQ 4-bit · class ceiling · eager,Qwen/Qwen3-14B-AWQ,14.8,awq,class-ceiling,0.5,eager,3,9.3666,13.81,,11.05,97.667,0.0,129.828,2.2123,1310.5867,22.0984,313.2377,2.5955,23.836,0.0
+15B AWQ 4-bit · deployment matched · cuda graph,Qwen/Qwen3-14B-AWQ,14.8,awq,deployment-matched,0.46,cuda_graph,3,9.3666,11.89,3.51,9.51,98.333,0.0,300.7217,0.4404,6784.881,32.6549,56.8013,0.3891,25.67,0.0
+15B AWQ 4-bit · deployment matched · eager,Qwen/Qwen3-14B-AWQ,14.8,awq,deployment-matched,0.46,eager,3,9.3666,11.91,,9.53,97.667,0.0,129.995,1.4067,1273.4023,17.031,315.331,8.0938,21.961,0.0

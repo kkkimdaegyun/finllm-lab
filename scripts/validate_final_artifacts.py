@@ -11,7 +11,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-import fitz
+import pymupdf
 from PIL import Image
 from pptx import Presentation
 from pptx.enum.shapes import MSO_SHAPE_TYPE
@@ -80,7 +80,7 @@ def validate_sources() -> None:
 
 def validate_pdf() -> None:
     if not PDF.exists() or PDF.stat().st_size<100_000: fail("PDF missing or too small")
-    document=fitz.open(PDF)
+    document=pymupdf.open(PDF)
     if len(document)<10: fail("PDF unexpectedly short")
     extracted="\n".join(page.get_text() for page in document)
     for token in ("Executive Summary","FinLLM Lab v0.2","43.765","NOT_EXECUTED"):
@@ -120,7 +120,7 @@ def validate_pptx(data) -> None:
 def validate_optional_pptx_render(slide_count: int) -> str:
     rendered=ROOT/"artifacts/rendered/FinLLM-Lab-v0.2-Developer-Portfolio.pdf"
     if rendered.exists():
-        doc=fitz.open(rendered); count=len(doc); doc.close()
+        doc=pymupdf.open(rendered); count=len(doc); doc.close()
         if count!=slide_count: fail(f"rendered PPTX PDF page count {count} != {slide_count}")
         return f"VERIFIED ({count} pages through LibreOffice)"
     return "PENDING_VALIDATION (LibreOffice/PowerPoint render not present)"

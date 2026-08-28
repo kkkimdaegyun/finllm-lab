@@ -7,7 +7,7 @@ import html
 import re
 from pathlib import Path
 
-import fitz
+import pymupdf
 import markdown
 from PIL import Image, ImageDraw
 from weasyprint import HTML
@@ -99,10 +99,10 @@ def render_preview() -> int:
     PREVIEW.mkdir(parents=True, exist_ok=True)
     for stale in PREVIEW.glob("page-*.png"):
         stale.unlink()
-    document = fitz.open(ARTIFACT)
+    document = pymupdf.open(ARTIFACT)
     thumbs: list[Image.Image] = []
     for index, page in enumerate(document):
-        pix = page.get_pixmap(matrix=fitz.Matrix(1.35, 1.35), alpha=False)
+        pix = page.get_pixmap(matrix=pymupdf.Matrix(1.35, 1.35), alpha=False)
         target = PREVIEW / f"page-{index + 1:02d}.png"
         pix.save(target)
         image = Image.open(target).convert("RGB")

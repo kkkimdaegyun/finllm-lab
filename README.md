@@ -20,6 +20,13 @@ Deployment → Observability → Alert → Regression → Incident → Rollback 
 actual Compose rehearsal로 검증한 v0.2 reference project다. 최종 release 판정은
 [`PASS`](docs/final-review/final-release-review.json)다.
 
+로컬 전체 검증 환경은 다음 두 명령으로 만든다.
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -e '.[qa]'
+```
+
 완료된 것:
 
 - 24/32/48GB profile, vLLM command builder, streaming load test
@@ -38,6 +45,8 @@ actual Compose rehearsal로 검증한 v0.2 reference project다. 최종 release 
 - Prometheus/Grafana/DCGM와 10개 alert rule
 - 153개 deterministic test, 11-stage actual regression gate
 - INC-003 service-down alert와 immutable container rollback
+- 18개 A6000 실측을 실행 경로·메모리·사용자 지연으로 재분석한
+  [`Quantization Autopsy`](projects/quantization-autopsy/README.md) 대시보드
 
 남은 것:
 

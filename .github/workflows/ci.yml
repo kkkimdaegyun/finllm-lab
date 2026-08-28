@@ -28,7 +28,14 @@ jobs:
             python -m py_compile "$script"
           done
       - name: Unit tests
-        run: python -m unittest discover -s tests -v
+        run: |
+          python -m unittest discover -s tests -v
+          python -m unittest discover -s projects/quantization-autopsy/tests -v
+
+      - name: Quantization Autopsy artifacts stay reproducible
+        run: |
+          python projects/quantization-autopsy/src/autopsy.py build
+          python projects/quantization-autopsy/src/autopsy.py check
 
       - name: Validate profile CLI
         run: |
