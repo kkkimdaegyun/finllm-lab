@@ -27,9 +27,10 @@ actual Compose rehearsal로 검증한 v0.2 reference project다. 최종 release 
 - FinLLM Lab 상세본: [`HTML`](artifacts/FinLLM-Lab-v0.2-Developer-Portfolio.html) ·
   [`편집 가능한 PPTX`](artifacts/FinLLM-Lab-v0.2-Developer-Portfolio.pptx) ·
   [`렌더링 PDF`](artifacts/rendered/FinLLM-Lab-v0.2-Developer-Portfolio.pdf)
+- 실제 tool-calling 프로젝트: [`FinCompliance Agent`](https://github.com/kkkimdaegyun/fincompliance-agent)
 
 통합본은 Production LLMOps → Quantization Autopsy → K-VoiceBench →
-EvidenceOps Agent를 `Build · Measure · Operate · Automate`라는 개발자 서사로
+FinCompliance Agent를 `Build · Measure · Operate · Act`라는 개발자 서사로
 연결한다. 두 PPTX 모두
 `Noto Sans KR`를 사용하며 텍스트·표·도형을 직접 수정할 수 있다.
 

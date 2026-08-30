@@ -41,7 +41,7 @@ SLIDES = [
         "kicker": "AI DEVELOPER · LLMOPS · AGENT ENGINEERING",
         "title": "Evidence-Driven\nAI Inference Portfolio",
         "lead": "김대균 · AI 추론을 만들고, 측정하고, 운영하며, 증거 기반 Agent로 자동화했습니다.",
-        "chips": ["Production LLMOps", "Quantization Debugging", "Korean ASR", "EvidenceOps Agent"],
+        "chips": ["Production LLMOps", "Quantization Debugging", "Korean ASR", "FinCompliance Agent"],
     },
     {
         "layout": "cards",
@@ -52,7 +52,7 @@ SLIDES = [
             {"head": "01 FinLLM Lab", "value": "운영", "text": "금융 Private RAG를 단일 GPU에서 어떻게 배포·관측·회귀·롤백할까?", "accent": CYAN},
             {"head": "02 Quantization Autopsy", "value": "원인", "text": "양자화 모델의 성능 저하를 정밀도가 아닌 실행 경로까지 어떻게 분해할까?", "accent": LIME},
             {"head": "03 K-VoiceBench", "value": "평가", "text": "한국어 ASR을 정확도·엔티티·RTF·VRAM의 같은 계약으로 어떻게 비교할까?", "accent": AMBER},
-            {"head": "04 EvidenceOps Agent", "value": "자동화", "text": "긴 AI 실험을 사람이 밤새 지키지 않아도 정책·큐·증거로 어떻게 운영할까?", "accent": CYAN},
+            {"head": "04 FinCompliance Agent", "value": "행동", "text": "금융 준법 검토에서 모델이 도구를 선택하되 권한과 근거를 코드로 어떻게 강제할까?", "accent": CYAN},
         ],
     },
     {
@@ -136,30 +136,30 @@ SLIDES = [
     },
     {
         "layout": "flow",
-        "kicker": "PROJECT 04 · EVIDENCEOPS AGENT",
-        "title": "AI 실험 운영을 사람의 밤샘에서 분리",
-        "lead": "허용된 도구만 순차 실행하고 interruption 이후 checkpoint에서 재개합니다.",
-        "flow": ["Discover", "Policy Gate", "Sequential Queue", "Execute", "Observe·Triage", "Evidence Pack"],
+        "kicker": "PROJECT 04 · FINCOMPLIANCE AGENT",
+        "title": "모델이 선택하고 애플리케이션이 통제",
+        "lead": "LLM이 도구 결과를 관찰해 다음 행동을 고르지만 실행 권한은 policy engine이 강제합니다.",
+        "flow": ["Request", "LLM Chooses", "Strict Policy", "Execute", "Observe·Replan", "HITL"],
         "metrics": [
-            ["Portfolio jobs", "6 / 6 PASS"], ["Unit tests", "12"],
-            ["GPU policy", "GPU 1 only"], ["LLM action", "Advisory"],
+            ["Strict tools", "9"], ["Policy eval", "12 / 12 PASS"],
+            ["Automated tests", "12 / 12"], ["Unauthorized finalize", "0"],
         ],
-        "callout": "CPU job은 CUDA를 볼 수 없고 GPU job은 물리 GPU 1번 exclusive lock",
+        "callout": "실제 OpenAI model lane은 API key 미설정으로 NOT_EXECUTED · deterministic control lane 완료",
     },
     {
         "layout": "table",
-        "kicker": "EVIDENCEOPS · VERIFIED RESULT",
-        "title": "실행보다 중요한 것은 증거와 중단 경계",
-        "lead": "세 프로젝트의 계약을 한 큐에서 검증하고 실행 사건을 SHA-256 hash chain으로 연결했습니다.",
-        "headers": ["항목", "구현 계약", "실측 결과", "Failure boundary"],
+        "kicker": "FINCOMPLIANCE · VERIFIED CONTROLS",
+        "title": "Tool hallucination과 권한 경계를 회귀 테스트",
+        "lead": "모델 선택을 결정적으로 재생하되 실제 tool registry·state·guardrail 경로를 그대로 통과시켰습니다.",
+        "headers": ["항목", "구현 계약", "검증 결과", "Failure boundary"],
         "rows": [
-            ["Agent run", "10-state machine + checkpoint", "6 / 6 jobs PASS", "완료 job 재실행 금지"],
-            ["Execution", "sequential queue + detach", "14.460s", "interruption 후 resume"],
-            ["Resource", "physical GPU 1 exclusive", "GPU executions 0", "CPU에서 CUDA 비노출"],
-            ["Evidence", "log hash + audit chain", "VERIFIED", "변조 시 chain 검증 실패"],
-            ["Interface", "CLI + MCP v2", "7 tools", "policy 우회 경로 없음"],
+            ["Tool call", "allowlist + strict JSON schema", "12 / 12 control PASS", "없는 도구·인자 차단"],
+            ["Evidence", "returned citation allowlist", "grounded normal flow", "가짜 규정 ID 탐지"],
+            ["Security", "untrusted output sanitizer", "injection neutralized", "도구 출력 명령 미실행"],
+            ["Authority", "out-of-band single-use token", "unauthorized finalize 0", "모델이 승인 생성 불가"],
+            ["Delivery", "FastAPI + Docker + CI + trace", "container smoke PASS", "trace_id replay"],
         ],
-        "callout": "NEEDS_ATTENTION은 자동 재시도하지 않으며 사람이 확인 · LLM triage NOT_NEEDED",
+        "callout": "Control PASS는 금융 법률 정확도 100%가 아니라 expected block/recovery가 관찰됐다는 의미",
     },
     {
         "layout": "table",
@@ -171,7 +171,7 @@ SLIDES = [
             ["FinLLM Lab", "model·tokenizer revision, ACL corpus", "schema + 11-stage gate", "result JSON · ADR · incident"],
             ["Quantization Autopsy", "18 immutable runs", "3회 반복·provenance", "JSON · CSV · Markdown · HTML"],
             ["K-VoiceBench", "audio manifest·GPU visibility", "WER/CER/entity contract", "result JSON · HTML · CI"],
-            ["EvidenceOps Agent", "experiment spec·argv allowlist", "checkpoint + hash chain", "JSON · HTML · MCP · CI"],
+            ["FinCompliance Agent", "strict tool schema·synthetic evidence", "12 adversarial controls", "JSON trace · API · HTML · PPTX"],
         ],
         "callout": "미실행 항목은 PASS로 바꾸지 않고 NOT_EXECUTED / NOT_EVALUATED로 남김",
     },
@@ -184,7 +184,7 @@ SLIDES = [
             {"head": "Inference", "value": "Runtime", "text": "vLLM·Transformers, single-GPU scheduling, memory budget, TTFT·RTF", "accent": CYAN},
             {"head": "Evaluation", "value": "Evidence", "text": "RAG quality·ACL·injection, WER·CER·entity, immutable provenance", "accent": LIME},
             {"head": "Operations", "value": "Safety", "text": "Docker Compose, metrics·alerts, regression gate, incident·rollback, CI", "accent": AMBER},
-            {"head": "AgentOps", "value": "Automation", "text": "policy gate, state machine, checkpoint·resume, MCP, tamper-evident audit", "accent": CYAN},
+            {"head": "Agent", "value": "Tool Use", "text": "function calling loop, strict guardrails, prompt-injection defense, out-of-band HITL", "accent": CYAN},
         ],
     },
     {
@@ -197,15 +197,15 @@ SLIDES = [
             ["FinLLM Lab v0.2", "153 tests + artifacts PASS", "HTML · PPTX · PDF", "origin/main"],
             ["Quantization Autopsy", "18 runs / 6 configs PASS", "Interactive HTML · report", "FinLLM companion"],
             ["K-VoiceBench", "6 tests + GPU1 result PASS", "Interactive HTML · evidence JSON", "local main"],
-            ["EvidenceOps Agent", "12 tests + 6/6 jobs PASS", "HTML · PPTX · evidence JSON", "local main"],
+            ["FinCompliance Agent", "12 tests + 12/12 controls PASS", "HTML · PPTX · trace JSON", "public main"],
         ],
-        "callout": "K-VoiceBench와 EvidenceOps는 나중에 GitHub 저장소를 만든 뒤 원격만 연결하면 되는 상태",
+        "callout": "FinCompliance Agent는 public main · K-VoiceBench와 EvidenceOps는 원격 연결 대기",
     },
     {
         "layout": "title",
         "kicker": "ONE NARRATIVE",
-        "title": "Build · Measure · Operate · Automate",
-        "lead": "금융 LLMOps, 양자화 원인 분석, 한국어 음성 평가를 거쳐 제한된 GPU의 AI 실험을 정책과 증거로 자동화했습니다.",
+        "title": "Build · Measure · Operate · Act",
+        "lead": "금융 LLMOps, 양자화 원인 분석, 한국어 음성 평가를 거쳐 모델이 근거와 권한 안에서 행동하는 Agent를 구현했습니다.",
         "chips": ["AI Developer", "LLMOps Engineer", "Inference Engineer", "Agent Engineer"],
     },
 ]
@@ -450,7 +450,7 @@ def validate() -> None:
     if FONT not in xml:
         raise ValueError("Noto Sans KR font metadata missing")
     page = HTML_PATH.read_text(encoding="utf-8")
-    for token in ("FinLLM", "Quantization Autopsy", "K-VoiceBench", "EvidenceOps Agent", "NOT_EVALUATED"):
+    for token in ("FinLLM", "Quantization Autopsy", "K-VoiceBench", "FinCompliance Agent", "NOT_EVALUATED"):
         if token not in page:
             raise ValueError(f"HTML token missing: {token}")
 
